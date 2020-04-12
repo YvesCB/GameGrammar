@@ -1,1 +1,5 @@
+crayons==0.2.0
+requests-oauthlib==1.2.0
+requests==2.22.0
+tinydb==3.15.2
 twitchio==1.0.0
