@@ -26,6 +26,14 @@ def is_superadmin(name):
     return name in config.superadmins
 
 
+def get_trailing_numbers(phrase):
+    splits = phrase.split(' ')
+    if splits[-1].isdigit():
+        return [' '.join(splits[:-1]), int(splits[-1])]
+    else:
+        return [phrase, None]
+
+
 def parse_command(message, n_arguments=None):
     """
     Splits a message into its command's components. A command has the structure:
@@ -54,27 +62,11 @@ def parse_command(message, n_arguments=None):
 
 
 def jisho(keyword):
-    data = json.loads(requests.get(
+    results = json.loads(requests.get(
         "http://jisho.org/api/v1/search/words?keyword={}".format(keyword)
     ).text)["data"]
 
-    results = []
-
-    if len(data) == 0:
+    if len(results) > 0:
+        return results[0]
+    else:
         return None
-
-    for search_result in data:
-        curr = {"word_jp": "", "reading": "", "english": [], "parts_of_speech": []}
-
-        if "word" in search_result["japanese"][0]:
-            curr["word_jp"] = search_result["japanese"][0]["word"]
-
-        if "reading" in search_result["japanese"][0]:
-            curr["reading"] = search_result["japanese"][0]["reading"]
-
-        curr["english"] = search_result["senses"][0]["english_definitions"]
-        curr["parts_of_speech"] = search_result["senses"][0]["parts_of_speech"]
-
-        results.append(curr)
-
-    return results

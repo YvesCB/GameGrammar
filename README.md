@@ -5,10 +5,11 @@ A repo for the GameGrammar Twitch bot and other projects down the line.
 ## How to run
 
 1. Clone the repo
-2. Copy the example config file with `cp config_example.py config.py`
-3. Set up your IRC connection data in `config.py`
-4. Set up the list of superadmins in `config.py`
-5. Run the bot with `python yvesbot.py`
+2. `pip install -r requirements.txt`
+3. Copy the example config file with `cp config_example.py config.py`
+4. Set up your IRC connection data in `config.py`
+5. Set up the list of superadmins in `config.py`
+6. Run the bot with `python yvesbot.py`
 
 That's it! :)
 
