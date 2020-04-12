@@ -52,6 +52,9 @@ class Bot(commands.Bot):
 
     @commands.command(name='add_tag')
     async def add_tag_command(self, ctx):
+        if not bot_db.is_mod(ctx.author.name):
+            utils.log_body('[Bot#add_tag_command] Access denied to ' + ctx.author.name)
+            return
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except ValueError:
@@ -69,6 +72,9 @@ class Bot(commands.Bot):
 
     @commands.command(name='remove_tag')
     async def remove_tag_command(self, ctx):
+        if not bot_db.is_mod(ctx.author.name):
+            utils.log_body('[Bot#remove_tag_command] Access denied to ' + ctx.author.name)
+            return
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except ValueError:
