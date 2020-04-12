@@ -3,6 +3,14 @@ import textwrap
 import crayons
 
 
+def get_unicode_digit(number):
+    digits = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
+    if number < len(digits):
+        return digits[number]
+    else:
+        return f'({number})'
+
+
 def log_header(text):
     print()
     print(crayons.green('- ' + str(text)))
