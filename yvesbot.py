@@ -5,15 +5,11 @@ import unicodedata
 
 import config
 import bot_tools
+import bot_db
 import utils
 
 
-TAGS = [
-    {'command': 'yes', 'response': 'Yes!'},
-    {'command': 'no', 'response': 'No!'},
-]
-
-tag_commands = [c['command'] for c in TAGS]
+tag_names = [t['name'] for t in bot_db.get_all_tags()]
 
 
 class Bot(commands.Bot):
@@ -27,40 +23,69 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         utils.log_kv('[Bot#event_ready] Ready with username', self.nick)
-        await self.add_tag('hello', 'OK DUDE')
+        utils.log_kv('Our tags', bot_db.get_all_tags())
 
     async def event_message(self, message):
         utils.log_kv('[Bot#event_message] New message', message.content)
         await self.handle_commands(message)
 
-    async def add_tag(self, name, response):
-        self.add_command(Command(name=name, func=self.get_tag, aliases=[], instance=None))
-        # TODO: Add tag to database
-
-    async def remove_tag(self, name):
-        self.remove_command(name)
-        # TODO: Remove tag from database
-
     async def get_tag(self, ctx):
-        # TODO: Get response from database
-        # NOTE: This may not be the best way to do this. We're not getting the actual command from
-        # the `ctx`, so we have to parse it from the message. This means we need to remove the
-        # prefix ourselves, and do not at the moment support arguments. This can be fixed.
-        tag_command = ctx.message.content.replace(ctx.prefix, '')
-        tag = [tag for tag in TAGS if tag['command'] == tag_command]
-        if len(tag) == 0:
-            utils.log_kv('[Bot#get_tag] Could not find tag, though we have a command', tag_command)
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 0)
+        except ValueError:
             return
-        response = tag[0]['response']
+        [tag_name] = command
+        tag = bot_db.get_tag(tag_name)
+        if tag is None:
+            utils.log_kv('[Bot#get_tag] Could not find tag, though we have a command', tag_name)
+            return
+        response = tag['response']
         await ctx.send(response)
 
-    @commands.command(name='get_tag', aliases=tag_commands)
+    @commands.command(name='get_tag', aliases=tag_names)
     async def get_tag_command(self, ctx):
         """
         We run this in `get_tag()` because we want to be able to use that function when adding
         tags as well.
         """
         await self.get_tag(ctx)
+
+    @commands.command(name='add_tag')
+    async def add_tag_command(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 2)
+        except ValueError:
+            return await ctx.send('Usage: add_tag <tag_name> <tag_response>')
+
+        [_, tag_name, tag_response] = command
+        utils.log_kv('Adding tag', [tag_name, tag_response])
+
+        if bot_db.exists_tag(tag_name):
+            await ctx.send('Tag {} already exists.'.format(tag_name))
+        else:
+            bot_db.add_tag(tag_name, tag_response)
+            self.add_command(Command(name=tag_name, func=self.get_tag, aliases=[], instance=None))
+            await ctx.send('Added tag {}.'.format(tag_name))
+
+    @commands.command(name='remove_tag')
+    async def remove_tag_command(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            return await ctx.send('Usage: remove_tag <tag_name>')
+
+        [_, tag_name] = command
+        utils.log_kv('Removing tag', tag_name)
+
+        if bot_db.exists_tag(tag_name):
+            bot_db.remove_tag(tag_name)
+
+            async def dummy_func():
+                pass
+
+            self.remove_command(Command(name=tag_name, func=dummy_func))
+
+        await ctx.send('Removed tag {}.'.format(tag_name))
 
     @commands.command(name='test')
     async def test_command(self, ctx):
