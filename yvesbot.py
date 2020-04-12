@@ -145,28 +145,24 @@ class Bot(commands.Bot):
     async def test_command(self, ctx):
         await ctx.send(f'Hello {ctx.author.name}!')
 
-    def get_jisho_results_message(self, keywords, sense_index=None):
-        result = bot_tools.jisho(keywords)
+    def get_jisho_results_message(self, keywords, result_index=None):
+        results = bot_tools.jisho(keywords)
 
-        if result is None:
+        if len(results) == 0:
             return f'Sorry, no results for {keywords}.'
 
-        n_senses_to_show = 3
-        sense_start_index = 0
-        utils.log_kv('sense_index', sense_index)
-        if sense_index is not None:
-            sense_indices_to_get = [sense_index]
+        if result_index and result_index < len(results) and result_index > 0:
+            result = results[result_index]
         else:
-            sense_indices_to_get = range(
-                sense_start_index,
-                min(len(result['senses']), sense_start_index + n_senses_to_show)
-            )
+            result = results[0]
+
+        n_senses_to_show = 3
 
         senses_parts = []
 
         for idx, sense in enumerate(result['senses']):
-            if idx not in sense_indices_to_get:
-                continue
+            if idx >= n_senses_to_show:
+                break
             digit = utils.get_unicode_digit(idx + 1)
             definitions = ', '.join(sense['english_definitions'])
 
@@ -184,6 +180,7 @@ class Bot(commands.Bot):
 
         senses_string = ' '.join(senses_parts)
 
+        # TODO: Only add parts of speech from senses we actually showed?
         pos_all = list(itertools.chain.from_iterable([
             s['parts_of_speech'] for s in result['senses']
         ]))
@@ -191,12 +188,15 @@ class Bot(commands.Bot):
         pos_short = [bot_tools.shorten_part_of_speech(pos) for pos in pos_unique]
         pos_string = '/'.join(pos_short)
 
-        message_prefix = 'gamegr2Hmmm'
-        message = \
-            f'{message_prefix} {result["japanese"][0]["word"]}・' + \
-            f'{result["japanese"][0]["reading"]} ' + \
-            f'{senses_string} ' + \
-            f'[{pos_string}]'
+        word = result["japanese"][0].get("word", None)
+        reading = result["japanese"][0].get("reading", None)
+
+        message = 'gamegr2Hmmm'
+        if word is not None:
+            message += f' {word}'
+        if reading is not None:
+            message += f' {reading}'
+        message += f' {senses_string} [{pos_string}]'
         return message
 
     @commands.command(name='j')
@@ -204,14 +204,14 @@ class Bot(commands.Bot):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except ValueError:
-            return await ctx.send('Usage: !j <keywords>')
+            return await ctx.send('Usage: !j <keywords> [<result_number>]')
 
         [_, keywords] = command
-        [keywords, sense_number] = bot_tools.get_trailing_numbers(keywords)
-        if sense_number is None:
+        [keywords, result_number] = bot_tools.get_trailing_numbers(keywords)
+        if result_number is None:
             message = self.get_jisho_results_message(keywords)
         else:
-            message = self.get_jisho_results_message(keywords, sense_number - 1)
+            message = self.get_jisho_results_message(keywords, result_number - 1)
         await ctx.send(message)
 
 

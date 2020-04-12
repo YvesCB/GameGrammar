@@ -19,15 +19,13 @@ That's it! :)
 
 A command for testing which prints out the requesting user's name.
 
-### `!j <term>`
+### `!j <term> [<result_number>]`
 
 Returns the jisho.org entires for `<term>`. Example: `!j 関係`.
 This is limited to three meanings.
 
-### `!jfrom <result_number> <term>`
-
-Returns the jisho.org entires for `<term>`, but starting from result number `result_number`.
-This is useful for looking at meanings of terms with many meanings. Example: `!j 5 関係`.
+This command can also take a number at the end. Example: `!j 関係 2`.
+This would return the second result for “関係”.
 
 ### `!add_tag <tag_name> <tag_response>`
 
