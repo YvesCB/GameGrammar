@@ -3,6 +3,7 @@ from tinydb import TinyDB, Query
 
 db = TinyDB('./data/db.json')
 db_tags = db.table('tags')
+db_mods = db.table('mods')
 
 
 def get_tag(name):
@@ -30,3 +31,25 @@ def add_tag(name, response):
 def remove_tag(name):
     Tag = Query()
     return db_tags.remove(Tag.name == name)
+
+
+def get_all_mods():
+    return db_mods.all()
+
+
+def is_mod(name):
+    Mod = Query()
+    mods = db_mods.search(Mod.name == name)
+    if len(mods) > 0:
+        return True
+    else:
+        return False
+
+
+def add_mod(name):
+    db_mods.insert({'name': name})
+
+
+def remove_mod(name):
+    Mod = Query()
+    return db_mods.remove(Mod.name == name)

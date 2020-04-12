@@ -7,6 +7,8 @@ A repo for the GameGrammar Twitch bot and other projects down the line.
 1. Clone the repo
 2. Copy the example config file with `cp config_example.py config.py`
 3. Set up your IRC connection data in `config.py`
+4. Set up the list of superadmins in `config.py`
+5. Run the bot with `python yvesbot.py`
 
 That's it! :)
 
@@ -19,6 +21,12 @@ A command for testing which prints out the requesting user's name.
 ### `!j <term>`
 
 Returns the jisho.org entires for `<term>`. Example: `!j 関係`.
+This is limited to three meanings.
+
+### `!jfrom <result_number> <term>`
+
+Returns the jisho.org entires for `<term>`, but starting from result number `result_number`.
+This is useful for looking at meanings of terms with many meanings. Example: `!j 5 関係`.
 
 ### `!add_tag <tag_name> <tag_response>`
 
@@ -33,16 +41,29 @@ causing the bot to reply with `tag_response`. An example:
 ```
 
 Added commands are stored persistently in the database and come into effect immediately.
+This command is restricted to mods.
 
 ### `!remove_tag <tag_name>`
 
 Analogously to `!add_tag`, this command removes a tag from the database, which comes into
-effect immediately.
+effect immediately. This command is restricted to mods.
 
 ### `!<tag_name>`
 
 If `tag_name` is a tag in the database, using it as a command will cause the bot to reply with
 that tag's respective `tag_response`. See `!add_tag`.
+
+### `!mods`
+
+Shows a list of all mods.
+
+### `!mod <user_name>`
+
+Adds a user to the mods table. This command is restricted to superadmins.
+
+### `!demod <user_name>`
+
+Removes a user from the mods table. This command is restricted to restricted to superadmins.
 
 ## Roadmap
 
