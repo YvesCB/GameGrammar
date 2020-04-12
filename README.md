@@ -53,6 +53,10 @@ effect immediately. This command is restricted to mods.
 If `tag_name` is a tag in the database, using it as a command will cause the bot to reply with
 that tag's respective `tag_response`. See `!add_tag`.
 
+### `!mods`
+
+Shows a list of all mods.
+
 ### `!mod <user_name>`
 
 Adds a user to the mods table. This command is restricted to superadmins.
