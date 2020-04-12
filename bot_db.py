@@ -33,7 +33,7 @@ def remove_tag(name):
     return db_tags.remove(Tag.name == name)
 
 
-def get_mods():
+def get_all_mods():
     return db_mods.all()
 
 
@@ -44,3 +44,12 @@ def is_mod(name):
         return True
     else:
         return False
+
+
+def add_mod(name):
+    db_mods.insert({'name': name})
+
+
+def remove_mod(name):
+    Mod = Query()
+    return db_mods.remove(Mod.name == name)

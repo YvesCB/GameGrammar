@@ -23,7 +23,9 @@ class Bot(commands.Bot):
 
     async def event_ready(self):
         utils.log_kv('[Bot#event_ready] Ready with username', self.nick)
-        utils.log_kv('Our tags', bot_db.get_all_tags())
+        utils.log_kv('Tags', bot_db.get_all_tags())
+        utils.log_kv('Mods', bot_db.get_all_mods())
+        utils.log_kv('Superadmins', config.superadmins)
 
     async def event_message(self, message):
         utils.log_kv('[Bot#event_message] New message', message.content)
@@ -91,7 +93,52 @@ class Bot(commands.Bot):
 
             self.remove_command(Command(name=tag_name, func=dummy_func))
 
-        await ctx.send('Removed tag {}.'.format(tag_name))
+            await ctx.send('Removed tag {}.'.format(tag_name))
+        else:
+            await ctx.send('Tag {} does not exist.'.format(tag_name))
+
+    @commands.command(name='mods')
+    async def mods_command(self, ctx):
+        mods = [mod['name'] for mod in bot_db.get_all_mods()]
+        await ctx.send('Mods: {}'.format(', '.join(mods)))
+
+    @commands.command(name='mod')
+    async def mod_command(self, ctx):
+        if not bot_tools.is_superadmin(ctx.author.name):
+            utils.log_body('[Bot#mod_command] Access denied to ' + ctx.author.name)
+            return
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            return await ctx.send('Usage: mod <name>')
+
+        [_, mod_name] = command
+        utils.log_kv('Modding', mod_name)
+
+        if bot_db.is_mod(mod_name):
+            await ctx.send('{} is already a mod.'.format(mod_name))
+        else:
+            bot_db.add_mod(mod_name)
+            await ctx.send('Modded {}.'.format(mod_name))
+
+    @commands.command(name='demod')
+    async def demod_command(self, ctx):
+        if not bot_tools.is_superadmin(ctx.author.name):
+            utils.log_body('[Bot#demod_command] Access denied to ' + ctx.author.name)
+            return
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            return await ctx.send('Usage: demod <name>')
+
+        [_, user_name] = command
+        utils.log_kv('Demodding', user_name)
+
+        if bot_db.is_mod(user_name):
+            bot_db.remove_mod(user_name)
+            await ctx.send('Demodded {}.'.format(user_name))
+        else:
+            await ctx.send('{} is not a mod.'.format(user_name))
 
     @commands.command(name='test')
     async def test_command(self, ctx):

@@ -6,6 +6,10 @@ import config
 import utils
 
 
+def is_superadmin(name):
+    return name in config.superadmins
+
+
 def parse_command(message, n_arguments=None):
     """
     Splits a message into its command's components. A command has the structure:
