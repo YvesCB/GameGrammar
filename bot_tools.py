@@ -66,7 +66,4 @@ def jisho(keyword):
         "http://jisho.org/api/v1/search/words?keyword={}".format(keyword)
     ).text)["data"]
 
-    if len(results) > 0:
-        return results[0]
-    else:
-        return None
+    return results
