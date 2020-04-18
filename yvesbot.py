@@ -10,6 +10,7 @@ import bot_db
 import utils
 
 
+GAMEGRAMMAR_USER_ID = 427289393
 tag_names = [t['name'] for t in bot_db.get_all_tags()]
 
 
@@ -17,6 +18,7 @@ class Bot(commands.Bot):
     def __init__(self):
         super().__init__(
             irc_token=config.bot_irc_token,
+            client_id=config.bot_client_id,
             nick=config.bot_nick,
             prefix=config.bot_prefix,
             initial_channels=config.bot_initial_channels
@@ -144,6 +146,11 @@ class Bot(commands.Bot):
     @commands.command(name='test')
     async def test_command(self, ctx):
         await ctx.send(f'Hello {ctx.author.name}!')
+
+    @commands.command(name='stats')
+    async def stats_command(self, ctx):
+        n_followers = await self.get_followers(GAMEGRAMMAR_USER_ID, count=True)
+        await ctx.send(f'GameGrammar has {n_followers} followers!')
 
     def get_jisho_results_message(self, keywords, result_index=None):
         results = bot_tools.jisho(keywords)
