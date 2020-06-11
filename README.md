@@ -77,4 +77,4 @@ The first thing would be to a simply database of prewritten messages that can be
 
 # Discord Bot
 
-Early stages. Gonna create a bot. Let's see where we go.
+GrammarBot will make your life better!
