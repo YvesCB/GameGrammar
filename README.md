@@ -1,4 +1,4 @@
-# GameGrammar
+# GameGrammar Twitch Bot
 
 A repo for the GameGrammar Twitch bot and other projects down the line.
 
@@ -74,3 +74,7 @@ The first thing would be to a simply database of prewritten messages that can be
 
 * Improve Twitch bot functionality: Tag feature
 * Create discord bot and link it to twitch chat bot
+
+# Discord Bot
+
+Early stages. Gonna create a bot. Let's see where we go.
