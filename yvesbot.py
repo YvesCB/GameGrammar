@@ -100,6 +100,11 @@ class Bot(commands.Bot):
         else:
             await ctx.send(f'Tag {tag_name} does not exist.')
 
+    @commands.command(name='tags')
+    async def tags_command(self, ctx):
+        tag_names = [t['name'] for t in bot_db.get_all_tags()]
+        await ctx.send('Tags: {}'.format(', '.join(tag_names)))
+
     @commands.command(name='mods')
     async def mods_command(self, ctx):
         mods = [mod['name'] for mod in bot_db.get_all_mods()]
@@ -147,10 +152,10 @@ class Bot(commands.Bot):
     async def test_command(self, ctx):
         await ctx.send(f'Hello {ctx.author.name}!')
 
-    @commands.command(name='stats')
-    async def stats_command(self, ctx):
-        n_followers = await self.get_followers(GAMEGRAMMAR_USER_ID, count=True)
-        await ctx.send(f'GameGrammar has {n_followers} followers!')
+    # @commands.command(name='stats')
+    # async def stats_command(self, ctx):
+    #     n_followers = await self.get_followers(GAMEGRAMMAR_USER_ID, count=True)
+    #     await ctx.send(f'GameGrammar has {n_followers} followers!')
 
     def get_jisho_results_message(self, keywords, result_index=None):
         results = bot_tools.jisho(keywords)
