@@ -1,5 +1,6 @@
 ### Our application things
 config.py
+*.json
 
 ### Standard Python things
 
