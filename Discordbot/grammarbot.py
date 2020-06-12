@@ -19,7 +19,7 @@ async def on_ready():
 @bot.command(name='tags', help='This command will list all available tags.')
 async def list_tags(ctx):
     tags = [t['name'] for t in bot_db.get_all_tags()]
-    await ctx.send('The available tags are:\n```{}```'.format('\n'.join(tags)))
+    await ctx.send('The available tags are: ```\n{}\n```'.format('\n'.join(tags)))
 
 @bot.command(name='t', help='Call pre-written messages called tags.')
 async def get_tag(ctx):
@@ -74,7 +74,7 @@ async def remove_tag(ctx):
 @bot.command(name='admins', help='Shows a list of all current admin roles.')
 async def list_admins(ctx):
     admins = [admins['name'] for admins in bot_db.get_all_admin_roles()]
-    await ctx.send('The admin roles are:\n```{}```'.format('\n'.join(admins)))
+    await ctx.send('The admin roles are: ```\n{}\n```'.format('\n'.join(admins)))
 
 @bot.command(name='admin_add', help='Adds a role to the list of admins. **Can only be used by admins!**')
 async def add_admin(ctx):
@@ -89,7 +89,6 @@ async def add_admin(ctx):
             await ctx.send(f'Error: The role `{role_name}` is alreayd an admin.`')
             return
         else:
-            print([roles.name for roles in ctx.guild.roles])
             if role_name in [roles.name for roles in ctx.guild.roles]:
                 bot_db.add_admin_role(role_name)
                 await ctx.send(f'Successfully added the role `{role_name}` to the list of admins.')

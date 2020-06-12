@@ -34,7 +34,7 @@ def remove_tag(name):
 
 def get_admin_role(name):
     Admin_role = Query()
-    admins = db_tags.search(Admin_role.name == name)
+    admins = db_admin_roles.search(Admin_role.name == name)
     if len(admins) > 0:
         return admins[0]
     else:
