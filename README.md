@@ -27,6 +27,10 @@ This is limited to three meanings.
 This command can also take a number at the end. Example: `!j 関係 2`.
 This would return the second result for “関係”.
 
+### `!tags`
+
+Will show the list of all availalbe tags.
+
 ### `!add_tag <tag_name> <tag_response>`
 
 Adds a tag to the database. A tag is kind of command, triggered when a user writes `!<tag_name>`,
@@ -78,3 +82,53 @@ The first thing would be to a simply database of prewritten messages that can be
 # Discord Bot
 
 GrammarBot will make your life better!
+
+## How to run
+
+1. Clone the repo
+2. `pip install -r requirements.txt`
+3. Copy the example config file with `cp config_example.py config.py`
+4. Set up your Discord connection data in `config.py`
+5. Set up the admin in `config.py`
+6. Run the bot with `python yvesbot.py`
+
+## Commands
+
+### `!t <name>`
+
+Displays the tag with the name specified if it exists.
+
+### `!tags`
+
+Displays the list of tags availalbe.
+
+### `!t_add <name> <content>`
+
+**Must be used by admin.** Adds a new tag (if the name is not already taken) with the name and content specfied. 
+
+```
+!t_add hello Hello this is the hello tag.
+> Successfully added tag hello.
+!t hello
+> Hello this is the hello tag.
+```
+
+### `!t_remove <name>`
+
+**Must be used by admin.** Removes a tag if it exitsts.
+
+### `!admins`
+
+Shows you a list of the current roles that are considered admins on the server. 
+
+### `!admin_add <name>`
+
+**Must be used by admin.** If no admin roles are specified, only the admin account specified in config will be able to use this commmand. Adds a role on the server to the list of admin roles.
+
+```
+!admin_add Mod
+> Successfully added the role Mod to the list of admins.
+!admins
+> The admin roles are:
+> Mod
+```
