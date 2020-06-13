@@ -86,7 +86,7 @@ async def remove_tag(ctx):
 
 
 @bot.command(name='admins', help='Shows a list of all current admin roles.')
-@command.guild_only()
+@commands.guild_only()
 async def list_admins(ctx):
     admins = [admins['name'] for admins in bot_db.get_all_admin_roles()]
     await ctx.send('The admin roles are: ```\n{}\n```'.format('\n'.join(admins)))
@@ -94,7 +94,7 @@ async def list_admins(ctx):
 
 @bot.command(name='admin_add', help='Adds a role to the list of admins. **Can only be used by admins!**')
 @is_admin()
-@command.guild_only()
+@commands.guild_only()
 async def add_admin(ctx):
     try:
         command = bot_tools.parse_command(ctx.message.content, 1)
@@ -115,7 +115,7 @@ async def add_admin(ctx):
 
 @bot.command(name='admin_remove', help='Removes a role from the list of admins. **Can only be used by admins!**')
 @is_admin()
-@command.guild_only()
+@commands.guild_only()
 async def remove_admin(ctx):
     try:
         command = bot_tools.parse_command(ctx.message.content, 1)
@@ -133,7 +133,7 @@ async def remove_admin(ctx):
 
 @bot.command(name='user_role_add', help='Adds a role to the list of self-assignable roles. **Can only be used by admins!**')
 @is_admin()
-@command.guild_only()
+@commands.guild_only()
 async def add_user_role(ctx):
     try:
         command = bot_tools.parse_command(ctx.message.content, 1)
@@ -154,7 +154,7 @@ async def add_user_role(ctx):
 
 @bot.command(name='user_role_remove', help='Removes a role from the list of self-assignable roles.')
 @is_admin()
-@command.guild_only()
+@commands.guild_only()
 async def remove_user_role(ctx):
     try:
         command = bot_tools.parse_command(ctx.message.content, 1)
@@ -171,7 +171,7 @@ async def remove_user_role(ctx):
 
 
 @bot.command(name='user_role', help='Assigns a role to a user or lists available roles.')
-@command.guild_only()
+@commands.guild_only()
 async def get_remove_role(ctx):
     try:
         command = bot_tools.parse_command(ctx.message.content, 1)
