@@ -115,5 +115,8 @@ async def remove_admin(ctx):
     else:
         await ctx.send('**You must be an admin to use this command!**')
 
+@bot.command(name='test', help='This command will output hello and your name.')
+async def test(ctx):
+    await ctx.send('Hello: {}'.format(ctx.message.author.name))
 
 bot.run(config.discord_token)
