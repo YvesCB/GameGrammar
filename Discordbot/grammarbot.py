@@ -31,6 +31,14 @@ async def on_ready():
     )
 
 
+@bot.event
+async def on_member_join(member):
+    guild = discord.utils.get(bot.guilds, name=config.discord_guild)
+    channel = discord.utils.get(guild.channels, id=410321201395924992)
+    msg = random.choice(bot_tools.welcome_messages).replace('<user>', f'<@{member.id}>')
+    await channel.send(msg)
+
+
 @bot.command(name='tag', aliases=['t'], help='Alliases: `!t`\nCall pre-written messages called tags. Show list of tags if no tag is specified.\nUsage: `!tag/!t <name>`')
 async def get_tag(ctx):
     try: 

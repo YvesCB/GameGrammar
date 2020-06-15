@@ -3,6 +3,19 @@ import discord
 import config
 import bot_db
 
+welcome_messages = [
+    'Hello <user>, what a joy to have you here! よろしく！',
+    'I feel better already, knowing that we have <user> here now! よろしく！',
+    'I too have a passion for Grammar you see, so I\'m sure we\'ll get along <user>! よろしく！',
+    'It is my pleasure as the bot of this here discord to welcome you <user>! よろしく！',
+    'You must be new here <user> but don\'t worry, we\'ve banned all the members that bite so no need to be shy! よろしく!',
+    'You know, I wasn\'t sure what to think of today but now that <user> is here, things are starting to look up! よろしく!', 
+    'お初にお目にかかります<user>様、グラマーボットです。どうぞよろしくおねがいします！',
+    'A good day to you <user>! I hope you\'ll feel at home here! よろしく！', 
+    'Positions everyone! <user> is here now! I want everyone on their best behaviour! よろしく!',
+    'なんと！<user>さんがサーバーに参加しました！よろしくおねがいします！',
+    'ようこそ、<user>さん！どうぞごゆっくりしてください！'
+]
 
 def parse_command(message, n_arguments=None):
     """
