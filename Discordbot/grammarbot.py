@@ -28,8 +28,6 @@ async def on_ready():
     print(
         f'{bot.user.name} has connected to Discord guild:\n'
         f'{guild.name}(id: {guild.id})'
-        activity = discord.Activity(name='bot activity', type=discord.CustomActivity(name='Use !h for help', emoji=None)))
-        await bot.change_presence(activity=activity)
     )
 
 
