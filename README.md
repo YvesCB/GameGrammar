@@ -72,12 +72,11 @@ Removes a user from the mods table. This command is restricted to restricted to 
 
 The goal is to eventually have a bunch of features for the twitch bot and functionality that would carry over to discord as well. For now, I think the focus should be to replace the functionality of the streamlabs bot bit by bit as to not needing to rely on it anymore.
 
-The first thing would be to a simply database of prewritten messages that can be called and shown in chat. Also functionality to dynamically add and remove said messages. We'll call that the tag feature
-
 ### Current tasks
 
-* Improve Twitch bot functionality: Tag feature
 * Create discord bot and link it to twitch chat bot
+* Create a shoutout command
+* Create an uptime command
 
 # Discord Bot
 
@@ -94,41 +93,16 @@ GrammarBot will make your life better!
 
 ## Commands
 
-### `!t <name>`
+### `!help`
 
-Displays the tag with the name specified if it exists.
+Use the help command to get information about the available commands.
 
-### `!tags`
+## Roadmap
 
-Displays the list of tags availalbe.
+This bot is meant to be used for all kinds of different thigns in the future. Currently, it supports some very basic things. 
 
-### `!t_add <name> <content>`
+### Current tasks
+ 
+* Make the bot post automatically when the stream goes live.
+* Update the help command: sort entries in a relevant way and make it context sensitive
 
-**Must be used by admin.** Adds a new tag (if the name is not already taken) with the name and content specfied. 
-
-```
-!t_add hello Hello this is the hello tag.
-> Successfully added tag hello.
-!t hello
-> Hello this is the hello tag.
-```
-
-### `!t_remove <name>`
-
-**Must be used by admin.** Removes a tag if it exitsts.
-
-### `!admins`
-
-Shows you a list of the current roles that are considered admins on the server. 
-
-### `!admin_add <name>`
-
-**Must be used by admin.** If no admin roles are specified, only the admin account specified in config will be able to use this commmand. Adds a role on the server to the list of admin roles.
-
-```
-!admin_add Mod
-> Successfully added the role Mod to the list of admins.
-!admins
-> The admin roles are:
-> Mod
-```
