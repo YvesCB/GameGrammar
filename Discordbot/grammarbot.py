@@ -29,6 +29,7 @@ async def on_ready():
         f'{bot.user.name} has connected to Discord guild:\n'
         f'{guild.name}(id: {guild.id})'
     )
+    await bot.change_presence(activity=discord.Game('Try !help'))
 
 
 @bot.event
