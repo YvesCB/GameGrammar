@@ -105,4 +105,3 @@ This bot is meant to be used for all kinds of different thigns in the future. Cu
  
 * Make the bot post automatically when the stream goes live.
 * Update the help command: sort entries in a relevant way and make it context sensitive
-* Create a welcome message to welcome users when they join the server
