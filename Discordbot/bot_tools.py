@@ -1,3 +1,4 @@
+from discord.ext import commands
 import discord
 
 import config
@@ -16,6 +17,20 @@ welcome_messages = [
     'なんと！<user>さんがサーバーに参加しました！よろしくおねがいします！',
     'ようこそ、<user>さん！どうぞごゆっくりしてください！'
 ]
+
+
+class AdminCheckFailure(commands.CheckFailure):
+    pass
+
+
+def is_admin():
+    async def predicate(ctx):
+        is_admin_bool = common_member([r['name'] for r in bot_db.get_all_admin_roles()], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id 
+        if not is_admin_bool:
+            raise AdminCheckFailure()
+        return True 
+    return commands.check(predicate)
+
 
 def parse_command(message, n_arguments=None):
     """
@@ -50,13 +65,7 @@ def common_member(a, b):
     return(False)
 
 
-def is_admin(user):
-    if(common_member([r['name'] for r in bot_db.get_all_admin_roles()], [roles.name for roles in user.roles])):
-        return(True)
-    return(False)
-
-
-def create_help_embed(commands):
+async def create_help_embed(ctx, commands):
     help_embed = discord.Embed(
         title = 'Commands',
         description = 'Here are all the commands supported by GrammarBot',
@@ -64,7 +73,11 @@ def create_help_embed(commands):
     )
     help_embed.set_footer(text='WIP')
     for command in commands:
-       help_embed.add_field(name = f'!{command.name}', value=f'{command.help}', inline=False)
+        try:
+            await command.can_run(ctx)
+            help_embed.add_field(name = f'!{command.name}', value=f'{command.help}', inline=False)
+        except:
+            pass
     return help_embed
     
 
