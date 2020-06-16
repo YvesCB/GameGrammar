@@ -52,7 +52,7 @@ class AdminRoleSystem(commands.Cog, name='Admin role system'):
             return
         else:
             bot_db.remove_admin_role(role_name)
-            await ctx.send(embed=bot_tools.create_simple_embed(_title='Admin roles', _description=f'Successfully removed the role `{role_name} from the list of admins.`'))
+            await ctx.send(embed=bot_tools.create_simple_embed(_title='Admin roles', _description=f'Successfully removed the role `{role_name}` from the list of admins.'))
 
 
 def setup(bot):

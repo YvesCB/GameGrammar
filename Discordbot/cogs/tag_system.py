@@ -64,7 +64,7 @@ class TagSystem(commands.Cog, name='Tag system'):
             return
         else:
             bot_db.remove_tag(tag_name)
-            await ctx.send(embed=bot_tools.create_simple_embed(_title='Error', _description=f'Successfully removed tag `{tag_name}`'))
+            await ctx.send(embed=bot_tools.create_simple_embed(_title='Tag', _description=f'Successfully removed tag `{tag_name}`'))
 
 
 def setup(bot):
