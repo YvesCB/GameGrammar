@@ -1,7 +1,4 @@
 # Grammarbot:
-# discord_token = 'NzIwNzY1NjU1MzgwMzk0MDg1.XuKvnQ.SWEJVhD7tdF43EGdbIKs9RHyIFE' 
-
-# RoBot:
 discord_token = '<token here>'
 
 # discord_guild = 'GameGrammar'
