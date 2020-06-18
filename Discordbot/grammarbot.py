@@ -31,6 +31,16 @@ async def on_member_join(member):
     await channel.send(msg)
 
 
+@bot.event
+async def on_message(ctx):
+    if ctx.author.bot:
+        return
+    elif ctx.content == 'o/':
+        await ctx.channel.send('\\o')
+    elif ctx.content == '\\o':
+        await ctx.channel.send('o/')
+
+
 @bot.command(name='help', aliases=['?', 'h'], help='Alliases: `!h/!?`\nDisplays the help message.\nUsage: `!help/!h/!?`')
 async def help_message(ctx):
     await ctx.send(embed=await bot_tools.create_help_embed(ctx, bot.commands))
