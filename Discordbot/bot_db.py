@@ -95,6 +95,7 @@ def get_user_points(user_id):
         return points[0]
     else:
         db_user_points.insert({'id': user_id, 'amount': 0})
+        points = db_user_points.search(User_points.id == user_id)
         return points[0]
 
 
