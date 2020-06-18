@@ -12,18 +12,18 @@ class StatsSystem(commands.Cog, name='Stats System'):
         self.bot = bot
 
 
-    async def count_messages(self, channel, member):
-        async for message in channel.history(limit=None):
-            if message.author.id == member.id:
-                self.count += 1
+    # async def count_messages(self, channel, member):
+    #     async for message in channel.history(limit=None):
+    #         if message.author.id == member.id:
+    #             self.count += 1
 
 
     async def create_user_embed(self, ctx, member):
-        self.count = 0
+        # self.count = 0
 
-        for channel in ctx.guild.channels:    
-            if isinstance(channel, discord.TextChannel):
-                await self.count_messages(channel, member)
+        # for channel in ctx.guild.channels:    
+        #     if isinstance(channel, discord.TextChannel):
+        #         await self.count_messages(channel, member)
 
         embed = discord.Embed(
             title = f'{member.name}\'s Info',
@@ -41,10 +41,10 @@ class StatsSystem(commands.Cog, name='Stats System'):
             value = member.created_at.strftime("%a, %d %b %Y, %H:%M:%S GMT"),
             inline = False
         )
-        embed.add_field(
-            name = 'Messages',
-            value = f'{self.count} in this server'
-        )
+        # embed.add_field(
+        #     name = 'Messages',
+        #     value = f'{self.count} in this server'
+        # )
         return embed
 
 
