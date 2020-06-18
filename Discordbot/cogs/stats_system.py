@@ -33,7 +33,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
         embed.set_footer(text=f'Requested by {ctx.author.name}')
         embed.add_field(
             name = 'Joined',
-            value = member.created_at.strftime("%a, %d %b %Y, %H:%M:%S GMT"),
+            value = member.joined_at.strftime("%a, %d %b %Y, %H:%M:%S GMT"),
             inline = False
         )
         embed.add_field(
