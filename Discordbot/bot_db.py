@@ -1,9 +1,10 @@
-from tinydb import TinyDB, Query
+from tinydb import TinyDB, Query, operations
 
 db = TinyDB('./data/db.json')
 db_tags = db.table('tags')
 db_admin_roles = db.table('admin_roles')
 db_user_roles = db.table('user_roles')
+db_user_points = db.table('user_points')
 
 # functions for tag db
 def get_tag(name):
@@ -85,3 +86,28 @@ def add_user_role(name):
 def remove_user_role(name):
     User_role = Query()
     return db_user_roles.remove(User_role.name == name)
+
+# functions for user points
+def get_user_points(user_id):
+    User_points = Query()
+    points = db_user_points.search(User_points.id == user_id)
+    if len(points) > 0:
+        return points[0]
+    else:
+        db_user_points.insert({'id': user_id, 'amount': 0})
+        return points[0]
+
+
+def user_points_upsert(user_id, incrdecr):
+    User_points = Query()
+    points = db_user_points.search(User_points.id == user_id)
+    if len(points) > 0 and incrdecr == 'incr':
+        db_user_points.update(operations.increment('amount'), User_points.id == user_id)
+    elif len(points) > 0 and incrdecr == 'decr':
+        db_user_points.update(operations.decrement('amount'), User_points.id == user_id)
+    else:
+        db_user_points.insert({'id': user_id, 'amount': 1})
+
+
+def get_all_user_points():
+    return db_user_points.all()
