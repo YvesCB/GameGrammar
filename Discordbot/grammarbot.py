@@ -32,13 +32,14 @@ async def on_member_join(member):
 
 
 @bot.event
-async def on_message(ctx):
-    if ctx.author.bot:
+async def on_message(message):
+    if message.author.bot:
         return
-    elif ctx.content == 'o/':
-        await ctx.channel.send('\\o')
-    elif ctx.content == '\\o':
-        await ctx.channel.send('o/')
+    elif message.content == 'o/':
+        await message.channel.send('\\o')
+    elif message.content == '\\o':
+        await message.channel.send('o/')
+    await bot.process_commands(message)
 
 
 @bot.command(name='help', aliases=['?', 'h'], help='Alliases: `!h/!?`\nDisplays the help message.\nUsage: `!help/!h/!?`')
