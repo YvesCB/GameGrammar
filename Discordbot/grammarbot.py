@@ -42,9 +42,9 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-@bot.command(name='help', aliases=['?', 'h'], help='Alliases: `!h/!?`\nDisplays the help message.\nUsage: `!help/!h/!?`')
-async def help_message(ctx):
-    await ctx.send(embed=await bot_tools.create_help_embed(ctx, bot.commands))
+# @bot.command(name='help', aliases=['?', 'h'], help='Alliases: `!h/!?`\nDisplays the help message.\nUsage: `!help/!h/!?`')
+# async def help_message(ctx):
+#     await ctx.send(embed=await bot_tools.create_help_embed(ctx, bot.cogs))
 
 
 for filename in os.listdir('./cogs'):

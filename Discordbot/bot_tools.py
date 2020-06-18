@@ -65,41 +65,60 @@ def common_member(a, b):
     return(False)
 
 
-async def create_help_embed(ctx, commands):
+async def create_help_embed(ctx, cogs):
     help_embed = discord.Embed(
-        title = 'Commands',
+        title = 'Commands', 
         description = 'Here are all the commands supported by GrammarBot',
         color = discord.Color.blue()
     )
-    help_embed.set_footer(text='WIP')
-    for command in commands:
-        try:
-            await command.can_run(ctx)
-            help_embed.add_field(name = f'!{command.name}', value=f'{command.help}', inline=False)
-        except:
-            pass
+    help_embed.set_footer(
+        text=f'Requested by {ctx.author.name}'
+    )
+    for cog_name, cog in cogs.items():
+        if len(cog.get_commands()) == 0:
+            continue
+        value = []
+        commands = cog.get_commands()
+        for command in commands:
+            try:
+                await command.can_run(ctx)
+                al = ', !'.join(command.aliases)
+                value.append(f'**!{command.name}, !{al}**\n{command.help}\n\n')
+            except:
+                pass
+        if len(value) > 0:
+            value = ''.join(value)
+            help_embed.add_field(
+                name = cog_name,
+                value = f'{value}',
+                inline = False
+                )
     return help_embed
     
 
-def create_list_embed(_title, _description, _field_name, items):
+def create_list_embed(ctx, _title, _description, _field_name, items):
     list_embed = discord.Embed(
         title = _title,
         description = _description,
         color = discord.Color.blue()
     )
-    list_embed.set_footer(text='WIP')
+    list_embed.set_footer(
+        text=f'Requested by {ctx.author.name}'
+    )
     if len(items) == 0:
-        list_embed.add_field(name = 'Roles', value = 'There are currently no user assignable roles. An admin can add them useing `!user_role_add/!ur_add <role_name>`')
+        list_embed.add_field(name = _field_name, value = 'There are currently none!')
     else:
         list_embed.add_field(name = _field_name, value = '{}'.format('\n'.join(items)), inline=False)
     return list_embed
 
 
-def create_simple_embed(_title, _description):
+def create_simple_embed(ctx, _title, _description):
     sipmle_embed = discord.Embed(
         title = _title,
         description = _description,
         color = discord.Color.blue()
     )        
-    sipmle_embed.set_footer(text='WIP')
+    sipmle_embed.set_footer(
+        text=f'Requested by {ctx.author.name}'
+    )
     return sipmle_embed
