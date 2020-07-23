@@ -110,6 +110,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
         cnt = 1
         for i, k in points_dict:
             member = ctx.guild.get_member(i)
+            if isinstance(member, None) : continue
             embed.add_field(
                 name = f'Rank {cnt}: {member.name}\t',
                 value = f'{k} Points!',
