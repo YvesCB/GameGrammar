@@ -15,7 +15,13 @@ welcome_messages = [
     'A good day to you <user>! I hope you\'ll feel at home here! よろしく！', 
     'Positions everyone! <user> is here now! I want everyone on their best behaviour! よろしく!',
     'なんと！<user>さんがサーバーに参加しました！よろしくおねがいします！',
-    'ようこそ、<user>さん！どうぞごゆっくりしてください！'
+    'ようこそ、<user>さん！どうぞごゆっくりしてください！',
+    'Oh! <user>! To think that we\'d be so lucky as to get you to join us on this server! Welcome!',
+    'I\'m just a program that can\'t understand many things. But I understand one thing and that is that it\'s a good thing to have you here <user>! Welcome.',
+    'あらあら、<user>さんではありませんか！はじめまして。どうかお見知りおきください。',
+    'ワオー！ようこそ、<user>さん。どうぞお上がりください！',
+    '今日は何の日でしょう？あっ、そうでした！<user>さんが来る日です！',
+    'Oh my! Welcome <user>, please make yourself at home.'
 ]
 
 
