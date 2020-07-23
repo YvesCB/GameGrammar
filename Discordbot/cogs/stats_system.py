@@ -39,10 +39,11 @@ class StatsSystem(commands.Cog, name='Stats System'):
             if member_rank.id == member.id : break
             cnt += 1
 
-        suffix = 'st'
-        if cnt == 2 : suffix = 'nd'
-        elif cnt == 3 : suffix = 'rd'
-        elif cnt > 3 : suffix = 'th'
+        suffix = 'th'
+        if cnt % 10 == 1 and cnt != 11 : suffix = 'st'
+        elif cnt % 10 == 2 and cnt != 12 : suffix = 'nd'
+        elif cnt % 10 == 3 and cnt != 13 : suffix = 'rd'
+
         embed.add_field(
             name = 'Joined',
             value = f'{member.joined_at.strftime("%a, %d %b %Y, %H:%M:%S GMT")}\n{cnt}{suffix} to join this server!',
