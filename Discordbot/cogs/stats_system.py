@@ -166,8 +166,8 @@ class StatsSystem(commands.Cog, name='Stats System'):
         points_dict = {user_points[i]['id'] : user_points[i]['amount'] for i in range(0,len(user_points))}
 
         points_dict = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
-        for i, k in points_dict:
-            print(i, k)
+        # for i, k in points_dict:
+        #     print(i, k)
 
         await ctx.send(embed = self.create_leader_embed(points_dict, ctx))
 
