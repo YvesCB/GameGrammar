@@ -19,7 +19,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
     #             self.count += 1
 
 
-    async def create_user_embed(self, ctx, member):
+    def create_user_embed(self, ctx, member):
         # self.count = 0
 
         # for channel in ctx.guild.channels:    
@@ -32,9 +32,20 @@ class StatsSystem(commands.Cog, name='Stats System'):
         )
         embed.set_thumbnail(url=member.avatar_url)
         embed.set_footer(text=f'Requested by {ctx.author.name}')
+        members = ctx.guild.members
+        members = sorted(members, key=lambda member: member.joined_at)
+        cnt = 1
+        for member_rank in members:
+            if member_rank.id == member.id : break
+            cnt += 1
+
+        suffix = 'st'
+        if cnt == 2 : suffix = 'nd'
+        elif cnt == 3 : suffix = 'rd'
+        elif cnt > 3 : suffix = 'th'
         embed.add_field(
             name = 'Joined',
-            value = member.joined_at.strftime("%a, %d %b %Y, %H:%M:%S GMT"),
+            value = f'{member.joined_at.strftime("%a, %d %b %Y, %H:%M:%S GMT")}\n{cnt}{suffix} to join this server!',
             inline = False
         )
         embed.add_field(
@@ -90,6 +101,26 @@ class StatsSystem(commands.Cog, name='Stats System'):
         return embed
 
     
+    def create_leader_embed(self, points_dict, ctx):
+        embed = discord.Embed(
+            title = 'Grammar Point Leader Board',
+            color = discord.Color.blue()
+        )
+        embed.set_footer(text=f'Requested by {ctx.author.name}')
+        cnt = 1
+        for i, k in points_dict:
+            member = ctx.guild.get_member(i)
+            embed.add_field(
+                name = f'Rank {cnt}: {member.name}\t',
+                value = f'{k} Points!',
+                inline = True
+            )
+            if cnt == 20 : break
+            cnt += 1
+        return embed
+
+
+    
     @commands.guild_only()
     @commands.command(name='user_info', aliases=['ui'], help='Displays the info for a user. Your own if none is specified.\nUsage: `!user_info/!ui <user_ping>`')
     async def user_info(self, ctx):
@@ -103,8 +134,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
                 return
         if len(command) == 1:
             member = ctx.guild.get_member(ctx.author.id)
-            message = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Stats', _description='Getting data... (Can take a few seconds)'))
-            await message.edit(embed=await self.create_user_embed(ctx, member))
+            await ctx.send(embed=self.create_user_embed(ctx, member))
         else:
             [_, mention] = command
             user_id = 0
@@ -117,14 +147,26 @@ class StatsSystem(commands.Cog, name='Stats System'):
             if member == None:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             else:
-                message = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Stats', _description='Getting data...(Can take a few seconds'))
-                await message.edit(embed=await self.create_user_embed(ctx, member))
+                await ctx.send(embed=self.create_user_embed(ctx, member))
         
 
     @commands.guild_only()
     @commands.command(name='server_info', aliases=['si'], help='Displays the info for the server.\nUsage: `!server_info/!si`')
     async def server_info(self, ctx):
         await ctx.send(embed=self.create_server_embed(ctx))
+
+    
+    @commands.guild_only()
+    @commands.command(name='leaderboard', aliases=['lb'], help='Displays the Grammar point Leaderboard for the server!\nUsage: `!leaderboard/!lb`')
+    async def leaderboard(self, ctx):
+        user_points = bot_db.get_all_user_points()
+        points_dict = {user_points[i]['id'] : user_points[i]['amount'] for i in range(0,len(user_points))}
+
+        points_dict = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
+        for i, k in points_dict:
+            print(i, k)
+
+        await ctx.send(embed = self.create_leader_embed(points_dict, ctx))
 
 
 def setup(bot):
