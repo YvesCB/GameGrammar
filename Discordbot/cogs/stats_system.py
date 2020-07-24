@@ -103,24 +103,40 @@ class StatsSystem(commands.Cog, name='Stats System'):
 
     
     def create_leader_embed(self, points_dict, ctx):
+        point_sum = 0
+        for i, k in points_dict :
+            point_sum += k
+
         embed = discord.Embed(
             title = 'Grammar Point Leader Board',
+            description = f'See how you rank in terms of Grammar Points! A total of **{point_sum} Points** have been given on this server!',
             color = discord.Color.blue()
         )
         embed.set_footer(text=f'Requested by {ctx.author.name}')
         cnt = 1
+        
         for i, k in points_dict:
             member = ctx.guild.get_member(i)
-            try : 
-                embed.add_field(
-                    name = f'Rank {cnt}: {member.name}\t',
-                    value = f'{k} Points!',
-                    inline = True
-                )
-                if cnt == 20 : break
+            try :
+                if member.id == ctx.author.id : 
+                    author_rank = cnt
+                    author_points = k
+                if cnt <= 20: 
+                    embed.add_field(
+                        name = f'Rank {cnt}: {member.name}',
+                        value = f'{k} Points!',
+                        inline = True
+                    )
                 cnt += 1
             except : 
                 print("Skipped member on lb that is no longer on the server.")
+
+        if author_rank > 20 : 
+            embed.add_field(
+                name = f'Rank {author_rank}: {ctx.author.name}',
+                value = f'{author_points} Points!',
+                inline = True
+            )
         return embed
 
 
