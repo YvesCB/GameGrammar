@@ -40,8 +40,8 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             if len(self.data['data']) > 0 and not self.is_live and self.six_h_passed():
                 self.went_live_at = time.time()
                 guild = discord.utils.get(self.bot.guilds, name=config.discord_guild)
-                channel = discord.utils.get(guild.channels, id=556020395959123968)
-                await channel.send('Hey @everyone , {} has gone live playing: {}.\nhttps://twitch.tv/gamegrammar'.format(self.data['data'][0]['user_name'], self.data['data'][0]['title']))
+                channel = discord.utils.get(guild.channels, id=737371050748280944)
+                await channel.send('Hey @everyone , {} has gone live playing: {}\nhttps://twitch.tv/gamegrammar'.format(self.data['data'][0]['user_name'], self.data['data'][0]['title']))
                 self.is_live = True
                 print('Stream went live')
             elif len(self.data['data']) == 0 and self.is_live:
