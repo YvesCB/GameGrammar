@@ -23,7 +23,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             'Authorization': config.Oauth2
         }
 
-        r = requests.get('https://api.twitch.tv/helix/streams?user_id=276504990', headers=para)
+        r = requests.get('https://api.twitch.tv/helix/streams?user_id=427289393', headers=para)
 
         return r.text
 
@@ -32,7 +32,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
     def six_h_passed(self):
         return time.time() - self.went_live_at > 21600
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=60)
     async def twitch_status(self):
         self.data = json.loads(self.get_data())
         try:

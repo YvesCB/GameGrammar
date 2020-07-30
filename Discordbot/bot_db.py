@@ -110,5 +110,14 @@ def user_points_upsert(user_id, incrdecr):
         db_user_points.insert({'id': user_id, 'amount': 1})
 
 
+def user_points_update(user_id, point_amount):
+    User_points = Query()
+    points = db_user_points.search(User_points.id == user_id)
+    if len(points) > 0:
+        db_user_points.update({'id': user_id, 'amount': point_amount})
+    else:
+        db_user_points.insert({'id': user_id, 'amount': point_amount})
+
+
 def get_all_user_points():
     return db_user_points.all()
