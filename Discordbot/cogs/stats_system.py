@@ -114,7 +114,9 @@ class StatsSystem(commands.Cog, name='Stats System'):
         )
         embed.set_footer(text=f'Requested by {ctx.author.name}')
         cnt = 1
-        
+        author_rank = 0
+        author_points = 0
+
         for i, k in points_dict:
             member = ctx.guild.get_member(i)
             try :
@@ -131,7 +133,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
             except : 
                 print("Skipped member on lb that is no longer on the server.")
 
-        if author_rank > 20 : 
+        if author_rank > 20 and author_rank != 0: 
             embed.add_field(
                 name = f'Rank {author_rank}: {ctx.author.name}',
                 value = f'{author_points} Points!',

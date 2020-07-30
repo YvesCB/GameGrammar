@@ -114,9 +114,11 @@ def user_points_update(user_id, point_amount):
     User_points = Query()
     points = db_user_points.search(User_points.id == user_id)
     if len(points) > 0:
-        db_user_points.update({'id': user_id, 'amount': point_amount})
-    else:
+        db_user_points.update(operations.set('amount', point_amount), User_points.id == user_id)
+        print(f'Updated {user_id}')
+    elif len(points) == 0 and point_amount > 0:
         db_user_points.insert({'id': user_id, 'amount': point_amount})
+        print(f'Inserted {user_id}')
 
 
 def get_all_user_points():
