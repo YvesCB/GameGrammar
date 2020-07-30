@@ -23,7 +23,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             'Authorization': config.Oauth2
         }
 
-        r = requests.get('https://api.twitch.tv/helix/streams?user_id=427289393', headers=para)
+        r = requests.get('https://api.twitch.tv/helix/streams?user_id=276504990', headers=para)
 
         return r.text
 
@@ -32,22 +32,24 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
     def six_h_passed(self):
         return time.time() - self.went_live_at > 21600
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=10)
     async def twitch_status(self):
         self.data = json.loads(self.get_data())
         try:
             # if stream online
             if len(self.data['data']) > 0 and not self.is_live and self.six_h_passed():
-                self.went_live_at = time.time()
                 guild = discord.utils.get(self.bot.guilds, name=config.discord_guild)
-                channel = discord.utils.get(guild.channels, id=737371050748280944)
+                channel = discord.utils.get(guild.channels, id=config.stream_channel_id)
+                print(guild.name, channel.name)
                 await channel.send('Hey @everyone , {} has gone live playing: {}\nhttps://twitch.tv/gamegrammar'.format(self.data['data'][0]['user_name'], self.data['data'][0]['title']))
+                self.went_live_at = time.time()
                 self.is_live = True
                 print('Stream went live')
             elif len(self.data['data']) == 0 and self.is_live:
                 self.is_live = False
                 print('Not live anymore!')
         except:
+            print('Error while trying to post live ping!')
             pass
 
 
