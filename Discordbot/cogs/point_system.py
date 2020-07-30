@@ -42,13 +42,14 @@ class PointSystem(commands.Cog):
         print('Getting counts...')
 
         for channel in ctx.guild.text_channels:
+            print('Searching: ', channel.name, '...')
             async for message in channel.history(limit=None):
                 for reaction in message.reactions:
-                    print(type(reaction.emoji), reaction)
+                    # print(type(reaction.emoji), reaction)
                     if not isinstance(reaction.emoji, str) and reaction.emoji.id == config.point_emote_id:
-                        print('Beep')
+                        print('Found Gamepad')
                         async for user in reaction.users():
-                            if user != message.author:
+                            if user == message.author:
                                 points[message.author.id] += reaction.count - 1
                                 break
                         else:
