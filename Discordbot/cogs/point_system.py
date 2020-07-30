@@ -48,12 +48,9 @@ class PointSystem(commands.Cog):
                     if not isinstance(reaction.emoji, str) and reaction.emoji.id == config.point_emote_id:
                         print('Beep')
                         async for user in reaction.users():
-                            if user == message.author:
-                                points[message.author.id] += reaction.count - 1
+                            if user != message.author:
+                                points[message.author.id] += 1
                                 break
-                            else:
-                                points[message.author.id] += reaction.count
-                    
         
         print(points)
 
