@@ -49,8 +49,11 @@ class PointSystem(commands.Cog):
                         print('Beep')
                         async for user in reaction.users():
                             if user != message.author:
-                                points[message.author.id] += 1
+                                points[message.author.id] += reaction.count - 1
                                 break
+                        else:
+                            points[message.author.id] += reaction.count
+                    
         
         print(points)
 
