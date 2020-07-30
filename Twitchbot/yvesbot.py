@@ -3,6 +3,7 @@ from twitchio.ext.commands.core import Command
 
 import unicodedata
 import itertools
+import random
 
 import config
 import bot_tools
@@ -151,6 +152,72 @@ class Bot(commands.Bot):
     @commands.command(name='test')
     async def test_command(self, ctx):
         await ctx.send(f'Hello {ctx.author.name}!')
+
+    @commands.command(name='clip')
+    async def clip(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            try:
+                command = bot_tools.parse_command(ctx.message.content, 0)
+            except ValueError:
+                return await ctx.send('Usage: !clip <number> or just !clip for random clip.')
+
+        clips_db = bot_db.get_all_clips()
+        clips = [clip['url'] for clip in clips_db]
+        
+        if len(command) == 2:
+            [_, num] = command
+            number = int(num)
+            if number <= len(clips):
+                await ctx.send(f'Clip {number}/{len(clips)}: {clips[number-1]}')
+            else:
+                await ctx.send(f'Chose from clips 1-{len(clips)} or no number for random clip.')
+        else:
+            rnd = random.randint(0,len(clips)-1)
+            await ctx.send(f'Clip {rnd+1}/{len(clips)}: {clips[rnd]}')
+
+    @commands.command(name='add_clip')
+    async def add_clip(self, ctx):
+        if not bot_db.is_mod(ctx.author.name):
+            utils.log_body('[Bot#add_clip_command] Access denied to ' + ctx.author.name)
+            return
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            return await ctx.send('Usage: !add_clip <url>.')
+
+        [_, url] = command
+
+        clips_db = bot_db.get_all_clips()
+        clips = [clip['url'] for clip in clips_db]
+
+        utils.log_kv('Adding Clip', [url])
+
+        if bot_db.exists_clip(url):
+            index = clips.index(url)
+            await ctx.send(f'That clip already exists. Clip {index+1}/{len(clips)}.')
+        else:
+            bot_db.add_clip(url)
+            await ctx.send(f'Added Clip {len(clips)+1}.')
+
+    @commands.command(name='remove_clip')
+    async def remove_clip(self, ctx):
+        if not bot_db.is_mod(ctx.author.name):
+            utils.log_body('[Bot#remove_clip_command] Access denied to ' + ctx.author.name)
+            return
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except ValueError:
+            return await ctx.send('Usage: !remove_clip <url>.')
+
+        [_, url] = command
+
+        if bot_db.exists_clip(url):
+            bot_db.remove_clip(url)
+            await ctx.send('Removed clip!')
+        else: 
+            await ctx.send('Clip does not exists in db!')    
 
     # @commands.command(name='stats')
     # async def stats_command(self, ctx):

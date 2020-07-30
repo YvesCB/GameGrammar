@@ -4,6 +4,7 @@ from tinydb import TinyDB, Query
 db = TinyDB('./data/db.json')
 db_tags = db.table('tags')
 db_mods = db.table('mods')
+db_clips = db.table('clips')
 
 
 def get_tag(name):
@@ -31,6 +32,33 @@ def add_tag(name, response):
 def remove_tag(name):
     Tag = Query()
     return db_tags.remove(Tag.name == name)
+
+
+def get_clip(url):
+    Clip = Query()
+    clips = db_clips.search(Clip.url == url)
+    if len(clips) > 0:
+        return clips[0]
+    else:
+        return None
+
+
+def exists_clip(url):
+    clip = get_clip(url)
+    return clip is not None
+
+
+def get_all_clips():
+    return db_clips.all()
+
+
+def add_clip(url):
+    db_clips.insert({'url': url})
+
+
+def remove_clip(url):
+    Clip = Query()
+    return db_clips.remove(Clip.url == url)
 
 
 def get_all_mods():
