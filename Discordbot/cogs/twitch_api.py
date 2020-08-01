@@ -41,7 +41,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
                 guild = discord.utils.get(self.bot.guilds, name=config.discord_guild)
                 channel = discord.utils.get(guild.channels, id=config.stream_channel_id)
                 print(guild.name, channel.name)
-                await channel.send('Hey @everyone , {} has gone live playing: {}\nhttps://twitch.tv/gamegrammar'.format(self.data['data'][0]['user_name'], self.data['data'][0]['title']))
+                await channel.send('Hey @Streamping , {} has gone live playing: {}\nhttps://twitch.tv/gamegrammar'.format(self.data['data'][0]['user_name'], self.data['data'][0]['title']))
                 self.went_live_at = time.time()
                 self.is_live = True
                 print('Stream went live')
