@@ -127,6 +127,8 @@ class ModSystem(commands.Cog, name='Modaration System'):
             return
 
         warns = bot_db.get_user_warnings(user_id)
+        if warns == None: 
+            warns = []
         await ctx.send(embed=self.create_sheet(ctx, warns, discord.utils.get(ctx.guild.members, id=user_id)))
 
 

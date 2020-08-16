@@ -140,17 +140,22 @@ def add_warning(user_id, warning):
     warnings = [warning]
     if len(warns) > 0:
         warnings.extend(warns[0]['warnings'])
-    db_user_data.update(operations.set('warnings', warnings), User_data.id == user_id)
+        db_user_data.update(operations.set('warnings', warnings), User_data.id == user_id)
+    else:
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': warnings, 'mutes': []})
 
 
 def remove_warning(user_id, warning_number):
     User_data = Query()
     warns = db_user_data.search(User_data.id == user_id)
-    warns = warns[0]['warnings']
-    if len(warns) >= warning_number:
-        del warns[warning_number - 1]
-        db_user_data.update(operations.set('warnings', warns), User_data.id == user_id)
-        return True
+    if len(warns) > 0:
+        warns = warns[0]['warnings']
+        if len(warns) >= warning_number:
+            del warns[warning_number - 1]
+            db_user_data.update(operations.set('warnings', warns), User_data.id == user_id)
+            return True
+        else:
+            return False
     else:
         return False
     
