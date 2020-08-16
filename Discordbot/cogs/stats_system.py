@@ -57,7 +57,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
         user_points = bot_db.get_user_points(member.id)
         embed.add_field(
             name = 'Grammar points (Awarded by others via GamePad reaction)',
-            value = user_points['amount'],
+            value = user_points['point_amount'],
             inline = False
         )
         # embed.add_field(
@@ -182,7 +182,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
     @commands.command(name='leaderboard', aliases=['lb'], help='Displays the Grammar point Leaderboard for the server!\nUsage: `!leaderboard/!lb`')
     async def leaderboard(self, ctx):
         user_points = bot_db.get_all_user_points()
-        points_dict = {user_points[i]['id'] : user_points[i]['amount'] for i in range(0,len(user_points))}
+        points_dict = {user_points[i]['id'] : user_points[i]['point_amount'] for i in range(0,len(user_points))}
 
         points_dict = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
         # for i, k in points_dict:

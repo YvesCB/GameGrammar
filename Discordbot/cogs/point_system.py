@@ -36,7 +36,7 @@ class PointSystem(commands.Cog):
         elif reaction.emoji.id == config.point_emote_id and not reaction.message.author == user:
             bot_db.user_points_upsert(reaction.message.author.id, 'incr')
             user_points = bot_db.get_user_points(reaction.message.author.id)
-            print(f'Incr. points for {reaction.message.author.name}. Now has {user_points["amount"]}')
+            print(f'Incr. points for {reaction.message.author.name}. Now has {user_points["point_amount"]}')
 
     
     @commands.Cog.listener()
@@ -47,7 +47,7 @@ class PointSystem(commands.Cog):
         elif reaction.emoji.id == config.point_emote_id and not reaction.message.author == user:
             bot_db.user_points_upsert(reaction.message.author.id, 'decr')
             user_points = bot_db.get_user_points(reaction.message.author.id)
-            print(f'Decr. points for {reaction.message.author.name}. Now has {user_points["amount"]}')
+            print(f'Decr. points for {reaction.message.author.name}. Now has {user_points["point_amount"]}')
 
 
     @commands.command(name='update_points', aliases=['up'], help='Update all point values for all users.\nCan only be used by admins!\nUsage: `!update_points/!up`')

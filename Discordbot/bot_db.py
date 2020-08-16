@@ -4,7 +4,7 @@ db = TinyDB('./data/db.json')
 db_tags = db.table('tags')
 db_admin_roles = db.table('admin_roles')
 db_user_roles = db.table('user_roles')
-db_user_points = db.table('user_points')
+db_user_data = db.table('user_data')
 
 # functions for tag db
 def get_tag(name):
@@ -89,37 +89,68 @@ def remove_user_role(name):
 
 # functions for user points
 def get_user_points(user_id):
-    User_points = Query()
-    points = db_user_points.search(User_points.id == user_id)
+    User_data = Query()
+    points = db_user_data.search(User_data.id == user_id)
     if len(points) > 0:
         return points[0]
     else:
-        db_user_points.insert({'id': user_id, 'amount': 0})
-        points = db_user_points.search(User_points.id == user_id)
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': [], 'mutes': []})
+        points = db_user_data.search(User_data.id == user_id)
         return points[0]
 
 
 def user_points_upsert(user_id, incrdecr):
-    User_points = Query()
-    points = db_user_points.search(User_points.id == user_id)
+    User_data = Query()
+    points = db_user_data.search(User_data.id == user_id)
     if len(points) > 0 and incrdecr == 'incr':
-        db_user_points.update(operations.increment('amount'), User_points.id == user_id)
+        db_user_data.update(operations.increment('point_amount'), User_data.id == user_id)
     elif len(points) > 0 and incrdecr == 'decr':
-        db_user_points.update(operations.decrement('amount'), User_points.id == user_id)
+        db_user_data.update(operations.decrement('point_amount'), User_data.id == user_id)
     else:
-        db_user_points.insert({'id': user_id, 'amount': 1})
+        db_user_data.insert({'id': user_id, 'point_amount': 1, 'warnings': [], 'mutes': []})
 
 
 def user_points_update(user_id, point_amount):
-    User_points = Query()
-    points = db_user_points.search(User_points.id == user_id)
+    User_data = Query()
+    points = db_user_data.search(User_data.id == user_id)
     if len(points) > 0:
-        db_user_points.update(operations.set('amount', point_amount), User_points.id == user_id)
+        db_user_data.update(operations.set('point_amount', point_amount), User_data.id == user_id)
         print(f'Updated {user_id}')
     elif len(points) == 0 and point_amount > 0:
-        db_user_points.insert({'id': user_id, 'amount': point_amount})
+        db_user_data.insert({'id': user_id, 'point_amount': point_amount, 'warnings': [], 'mutes': []})
         print(f'Inserted {user_id}')
 
 
 def get_all_user_points():
-    return db_user_points.all()
+    return db_user_data.all()
+
+# functions for user warns and mutes
+def get_user_warnings(user_id):
+    User_warns = Query()
+    warns = db_user_data.search(User_warns.id == user_id)
+    if len(warns) > 0:
+        return warns[0]['warnings']
+    else:
+        return None
+
+
+def add_warning(user_id, warning):
+    User_data = Query()
+    warns = db_user_data.search(User_data.id == user_id)
+    warnings = [warning]
+    if len(warns) > 0:
+        warnings.extend(warns[0]['warnings'])
+    db_user_data.update(operations.set('warnings', warnings), User_data.id == user_id)
+
+
+def remove_warning(user_id, warning_number):
+    User_data = Query()
+    warns = db_user_data.search(User_data.id == user_id)
+    warns = warns[0]['warnings']
+    if len(warns) >= warning_number:
+        del warns[warning_number - 1]
+        db_user_data.update(operations.set('warnings', warns), User_data.id == user_id)
+        return True
+    else:
+        return False
+    
