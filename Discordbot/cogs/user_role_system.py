@@ -26,6 +26,7 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
             await ctx.send(embed=bot_tools.create_list_embed(ctx=ctx, _title='Self assignable roles', _description='Here is a list of all the roles you can assign to yourself.', _field_name='User roles', items=user_roles))
         else:
             [_, role_name] = command
+            role_name.replace('<', '').replace('>', '')
             if not bot_db.exists_user_role(role_name):
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` is not on the list of self-assignable roles.'))
                 return
