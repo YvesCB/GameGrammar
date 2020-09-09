@@ -5,6 +5,7 @@ db_tags = db.table('tags')
 db_admin_roles = db.table('admin_roles')
 db_user_roles = db.table('user_roles')
 db_user_data = db.table('user_data')
+db_voice_text = db.table('voice_text')
 
 # functions for tag db
 def get_tag(name):
@@ -158,4 +159,31 @@ def remove_warning(user_id, warning_number):
             return False
     else:
         return False
+
+
+# Voice/text db
+def get_voice_text(voice_id):
+    Voice_text = Query()
+    voice_text_entry = db_voice_text.search(Voice_text.vc_id == voice_id)
+    if len(voice_text_entry) > 0:
+        return voice_text_entry[0]
+    else:
+        return None
     
+
+def exists_voice_text(voice_id):
+    voice_text_entry = get_voice_text(voice_id)
+    return voice_text_entry is not None
+
+
+def get_all_voice_text():
+    return db_voice_text.all()
+
+
+def add_voice_text(voice_id, text_id, role_id):
+    db_voice_text.insert({'vc_id': voice_id, 'tc_id': text_id, 'r_id': role_id})
+
+
+def remove_voic_text(vocie_id):
+    Voice_text = Query()
+    return db_voice_text.remove(Voice_text.vc_id == vocie_id)
