@@ -10,7 +10,7 @@ import bot_tools
 
 def create_embed(title, image_url, game, viewers):
     embed = discord.Embed(
-        title="GameGrammar is live", colour=discord.Colour(0x628e53), url="https://twitch.tv/gamegrammar",
+        title="GameGrammar is live", colour=discord.Colour.blue(), url="https://twitch.tv/gamegrammar",
         description=title
     )
     embed.set_image(url=image_url)

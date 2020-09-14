@@ -53,7 +53,7 @@ def create_eightball_embed(author, message):
     return embed
 
 
-class ExtraStuff(commands.Cog):
+class ExtraStuff(commands.Cog, name='Extra fun stuff'):
     def __init__(self, bot):
         self.bot = bot
 
