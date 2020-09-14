@@ -27,7 +27,7 @@ class VoiceSystem(commands.Cog):
                 return
 
         # case 2
-        elif before.channel is not None and after.channel is not None:
+        elif before.channel is not None and after.channel is not None and not before.channel == after.channel:
             entry_before = bot_db.get_voice_text(before.channel.id)
             entry_after = bot_db.get_voice_text(after.channel.id)
             role_before = member.guild.get_role(entry_before['r_id'])
