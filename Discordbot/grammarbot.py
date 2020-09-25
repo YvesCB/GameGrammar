@@ -45,9 +45,14 @@ async def on_message(message):
 @bot_tools.is_admin()
 @bot.command(name='reload', aliases=['rl'], help='Reloads all the cogs.\nUsage:')
 async def relaod(ctx):
+    cogs = ''
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
             bot.reload_extension(f'cogs.{filename[:-3]}')
+            cogs += filename + '\n'
+    
+    await ctx.send(embed=bot_tools.create_simple_embed(ctx, 'Reloading', cogs))
+
 
 # @bot.command(name='help', aliases=['?', 'h'], help='Alliases: `!h/!?`\nDisplays the help message.\nUsage: `!help/!h/!?`')
 # async def help_message(ctx):
