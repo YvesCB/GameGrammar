@@ -28,7 +28,7 @@ async def on_member_join(member):
     guild = discord.utils.get(bot.guilds, name=config.discord_guild)
     channel = discord.utils.get(guild.channels, id=410321201395924992)
     msg = random.choice(bot_tools.welcome_messages).replace('<user>', f'<@{member.id}>')
-    await channel.send(f'{msg}\nThere are a few Roles you can assign yourself. Simply use `!ur` to get a list of the roles that are available.\n自分にロールをつけることもできます。 `!ur`を入力したら、ロールのリストが表示されます。')
+    await channel.send(f'{msg}\nThere are a few Roles you can assign yourself. Check out <#759415738820853790>!\n自分にロールをつけることもできます。 <#759415738820853790> をチェックしてください！')
 
 
 @bot.event
