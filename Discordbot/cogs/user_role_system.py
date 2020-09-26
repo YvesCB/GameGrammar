@@ -59,10 +59,11 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
 
         [_, roles] = command
         roles = roles.split()
+        role_ids = [int(role.replace('<@&', '').replace('>', '')) for role in roles]
         invalid_roles = []
         valid_roles = []
-        for role in roles:
-            role_obj = discord.utils.get(ctx.guild.roles, name=role)
+        for role in role_ids:
+            role_obj = discord.utils.get(ctx.guild.roles, id=role)
             if role_obj is None:
                 invalid_roles.append(role)
             else:
