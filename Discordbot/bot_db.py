@@ -1,4 +1,4 @@
-from tinydb import TinyDB, Query, operations
+from tinydb import TinyDB, Query, operations, where
 
 db = TinyDB('./data/db.json')
 db_tags = db.table('tags')
@@ -6,6 +6,7 @@ db_admin_roles = db.table('admin_roles')
 db_user_roles = db.table('user_roles')
 db_user_data = db.table('user_data')
 db_voice_text = db.table('voice_text')
+db_role_data = db.table('role_data')
 
 # functions for tag db
 def get_tag(name):
@@ -87,6 +88,40 @@ def add_user_role(name):
 def remove_user_role(name):
     User_role = Query()
     return db_user_roles.remove(User_role.name == name)
+
+
+def get_role_data():
+    data = db_role_data.search(where('message_id').exists())
+    if len(data) > 0:
+        return data
+    else:
+        return None
+
+
+def get_role_emotes():
+    data = db_role_data.search(where('role_emote').exists())
+    if len(data) > 0:
+        return data
+    else:
+        return None
+
+
+def update_role_data(role_emote_dict):
+    data = db_role_data.search(where('role_emote').exists())
+    if len(data) > 0:
+        db_role_data.update(operations.set('role_emote', role_emote_dict), where('role_emote').exists())
+    else:
+        db_role_data.insert({'role_emote': role_emote_dict})
+
+
+def fill_role_data(msg_id, ch_id):
+    db_role_data.insert({'message_id': msg_id, 'channel_id': ch_id})
+
+
+def change_role_data(msg_id, ch_id):
+    db_role_data.update(operations.set('message_id', msg_id), where('message_id').exists())
+    db_role_data.update(operations.set('channel_id', ch_id), where('channel_id').exists())
+
 
 # functions for user points
 def get_user_points(user_id):
