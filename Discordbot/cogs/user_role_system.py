@@ -116,7 +116,10 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
             channel = discord.utils.get(ctx.guild.text_channels, id=data[0]['channel_id'])
             message = discord.utils.get(await channel.history().flatten(), id=data[0]['message_id'])
             
-            response = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'The current reaction role channel is <#{channel.id}> and the message {message.jump_url} ! Are you sure you want to change it?'))
+            try:
+                response = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'The current reaction role channel is <#{channel.id}> and the message {message.jump_url} ! Are you sure you want to change it?'))
+            except:
+                response = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'The current reaction role channel is <#{channel.id}> but the message cannot be found. It was most likely deleted. Do you want to overwrite?'))
             check_mark = '\U00002714'
             cross_mark = '\U0000274C'
             await response.add_reaction(check_mark)
