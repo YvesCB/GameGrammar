@@ -61,7 +61,7 @@ def create_offline_embed(user, latest_title, latest_game, follow_count, sub_coun
     )
     embed.add_field(
         name="Subscribers", 
-        value=sub_count, 
+        value=sub_count-1, 
         inline=False
     )
     embed.add_field(
@@ -117,7 +117,7 @@ def create_live_embed(user, title, game, live_views, follow_count, sub_count, vi
     )
     embed.add_field(
         name="Subscribers", 
-        value=sub_count, 
+        value=sub_count-1, 
         inline=False
     )
 
