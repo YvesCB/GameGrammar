@@ -135,6 +135,9 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
 
     def __init__(self, bot):
         self.bot = bot
+        is_live = False
+        went_live_at = 0
+        self.twitch_status.start()
 
 
     def get_live_data(self):
@@ -240,7 +243,11 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             )
 
 
-    @tasks.loop(seconds=10)
+    def cog_unload(self):
+        self.twitch_status.cancel()
+
+
+    @tasks.loop(seconds=60)
     async def twitch_status(self):
         data = json.loads(self.get_live_data())
         try:
@@ -272,5 +279,3 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
 
 def setup(bot):
     bot.add_cog(TwitchAPI(bot))
-    bot.cogs.get('Twitch API handling').twitch_status.start()
-    
