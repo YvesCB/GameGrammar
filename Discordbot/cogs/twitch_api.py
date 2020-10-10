@@ -207,16 +207,28 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             subs = self.get_subs()
             user_info = json.loads(self.get_user_info())
 
+            title = data['data'][0]['title']
+            game_name = ''
+            try:
+                game_name = game_data['data'][0]['name']
+            except:
+                game_name = 'None'
+            viewer_count = data['data'][0]['viewer_count']
+            follow_count = follows['total']
+            sub_count = len(subs['data'])
+            viewer_count = user_info['data'][0]['view_count']
+            thumb_url = data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
+
             await ctx.send(
                 embed=create_live_embed(
                     ctx.author,
-                    data['data'][0]['title'],
-                    game_data['data'][0]['name'],
-                    data['data'][0]['viewer_count'],
-                    follows['total'],
-                    len(subs['data']),
-                    user_info['data'][0]['view_count'],
-                    data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
+                    title,
+                    game_name,
+                    viewer_count,
+                    follow_count,
+                    sub_count,
+                    viewer_count,
+                    thumb_url
                 )
             )
     
@@ -229,16 +241,29 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             user_info = json.loads(self.get_user_info())
             latest_video = json.loads(self.get_videos())
 
+            title = broadcaster_data['data'][0]['title']
+            game_name = ''
+            try:
+                game_name = game_data['data'][0]['title']
+            except:
+                game_name = 'None'
+
+            follower_count = follows['total']
+            sub_count = len(subs['data'])
+            view_count = user_info['data'][0]['view_count']
+            latest_video_title = latest_video['data'][0]['title']
+            latest_video_url = latest_video['data'][0]['url']
+
             await ctx.send(
                 embed=create_offline_embed(
                     ctx.author,
-                    broadcaster_data['data'][0]['title'],
-                    game_data['data'][0]['name'],
-                    follows['total'],
-                    len(subs['data']),
-                    user_info['data'][0]['view_count'],
-                    latest_video['data'][0]['title'],
-                    latest_video['data'][0]['url']
+                    title,
+                    game_name,
+                    follower_count,
+                    sub_count,
+                    view_count,
+                    latest_video_title,
+                    latest_video_url
                 )
             )
 
@@ -255,15 +280,25 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             if len(data['data']) > 0 and not self.is_live and self.six_h_passed():
                 guild = discord.utils.get(self.bot.guilds, name=config.discord_guild)
                 channel = discord.utils.get(guild.channels, id=config.stream_channel_id)
-                print(guild.name, channel.name)
                 game = json.loads(self.get_game(data['data'][0]['game_id']))
+                print(guild.name, channel.name)
+
+                title = data['data'][0]['title']
+                thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
+                game_name = ''
+                try:
+                    game_name = game['data'][0]['title']
+                except:
+                    game_name = 'None'
+                viewer_count = data['data'][0]['viewer_count']
+
                 await channel.send(
                     content='Hey <@&739058472704016487> , GameGrammar has gone live!', 
                     embed=create_notif_embed(
-                        data['data'][0]['title'], 
-                        data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720'),
-                        game['data'][0]['name'], 
-                        data['data'][0]['viewer_count']
+                        title,
+                        thumb_url,
+                        game_name,
+                        viewer_count
                     )
                 )
                 self.went_live_at = time.time()
