@@ -244,7 +244,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
             title = broadcaster_data['data'][0]['title']
             game_name = ''
             try:
-                game_name = game_data['data'][0]['title']
+                game_name = game_data['data'][0]['name']
             except:
                 game_name = 'None'
 
@@ -287,7 +287,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
                 thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
                 game_name = ''
                 try:
-                    game_name = game['data'][0]['title']
+                    game_name = game['data'][0]['name']
                 except:
                     game_name = 'None'
                 viewer_count = data['data'][0]['viewer_count']
