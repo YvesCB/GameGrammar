@@ -19,35 +19,47 @@ class VoiceSystem(commands.Cog):
         # case 1
         if before.channel is None and after.channel is not None:
             entry = bot_db.get_voice_text(after.channel.id)
-            role = member.guild.get_role(entry['r_id'])
-            if role is not None:
+            # entering into afk or non role channel
+            if entry is None:
+                return
+            else:
+                role = member.guild.get_role(entry['r_id'])
                 await member.add_roles(role, reason=None, atomic=True)
                 print(f'{member.name} entered {after.channel.name} and got role {role.name}')
-            else:
-                return
 
         # case 2
         elif before.channel is not None and after.channel is not None and not before.channel == after.channel:
             entry_before = bot_db.get_voice_text(before.channel.id)
             entry_after = bot_db.get_voice_text(after.channel.id)
-            role_before = member.guild.get_role(entry_before['r_id'])
-            role_after = member.guild.get_role(entry_after['r_id'])
-            if role_after is not None and role_before is not None:
+            # coming back from afk or other non-listed role channel
+            if entry_before is None and entry_after is not None:
+                role_after = member.guild.get_role(entry_after['r_id'])
+                await member.add_roles(role_after, reason=None, atomic=True)
+                print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and received {role_after.name}')
+
+            # going into afk or other non role channel
+            elif entry_before is not None and entry_after is None:
+                role_before = member.guild.get_role(entry_before['r_id'])
+                await member.remove_roles(role_before, reason=None, atomic=True)
+                print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and lost {role_before.name}')
+
+            else:
+                role_before = member.guild.get_role(entry_before['r_id'])
+                role_after = member.guild.get_role(entry_after['r_id'])
                 await member.remove_roles(role_before, reason=None, atomic=True)
                 await member.add_roles(role_after, reason=None, atomic=True)
                 print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and changed roles from {role_before.name} to {role_after.name}')
-            else:
-                return
 
         # case 3
         elif before.channel is not None and after.channel is None:
             entry = bot_db.get_voice_text(before.channel.id)
-            role = member.guild.get_role(entry['r_id'])
-            if role is not None:
+            # leaving afk or other non role channel
+            if entry is None:
+                return
+            else:
+                role = member.guild.get_role(entry['r_id'])
                 await member.remove_roles(role, reason=None, atomic=True)
                 print(f'{member.name} left {before.channel.name} and lost role {role.name}')
-            else:
-                return
 
 
     # Define a voice channel and text channel. Bot will set up a role that has permission to see said text channel and save that configuration.
