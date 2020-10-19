@@ -200,6 +200,7 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
     @commands.guild_only()
     async def twitch_stats(self, ctx):
         data = json.loads(self.get_live_data())
+        
         # if stream online
         if len(data['data']) > 0:
             game_data = json.loads(self.get_game(data['data'][0]['game_id']))
