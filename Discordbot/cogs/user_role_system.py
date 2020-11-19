@@ -48,7 +48,7 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
                 role = discord.utils.get(guild.roles, id=role_id)
                 user = discord.utils.get(guild.members, id=payload.user_id)
                 await user.remove_roles(role, reason=None, atomic=True)
-                print(f'Remove role {role.name} to member {user.name}')
+                print(f'Removed role {role.name} from member {user.name}')
             
 
     @commands.command(name='purge_role', aliases=['pr'], help='Removes the specified role from every user on the server.\nUsage: `!purge_role/!pr <role_name(s)>`')
