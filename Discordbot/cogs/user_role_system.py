@@ -13,36 +13,40 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
 
     @commands.Cog.listener()
     @commands.guild_only()
-    async def on_reaction_add(self, reaction, user):
+    async def on_raw_reaction_add(self, payload):
         role_emotes = bot_db.get_role_emotes()[0]['role_emote']
         data = bot_db.get_role_data()
         if data is None or role_emotes is None:
             return
             
-        if reaction.message.id != data[0]['message_id']:
+        if payload.message_id != data[0]['message_id']:
             return
 
         for emote, role in role_emotes.items():
-            if reaction.emoji.id == int(emote.split(':')[2]):
-                role = discord.utils.get(reaction.message.guild.roles, id=role)
+            if payload.emoji.id == int(emote.split(':')[2]):
+                guild = self.bot.get_guild(payload.guild_id)
+                role = discord.utils.get(guild.roles, id=role)
+                user = discord.utils.get(guild.members, id=payload.user_id)
                 await user.add_roles(role, reason=None, atomic=True)
                 print(f'Added role {role.name} to member {user.name}')
 
     
     @commands.Cog.listener()
     @commands.guild_only()
-    async def on_reaction_remove(self, reaction, user):
+    async def on_raw_reaction_remove(self, payload):
         role_emotes = bot_db.get_role_emotes()[0]['role_emote']
         data = bot_db.get_role_data()
         if data is None or role_emotes is None:
             return
             
-        if reaction.message.id != data[0]['message_id']:
+        if payload.message_id != data[0]['message_id']:
             return
 
-        for emote, role in role_emotes.items():
-            if reaction.emoji.id == int(emote.split(':')[2]):
-                role = discord.utils.get(reaction.message.guild.roles, id=role)
+        for emote, role_id in role_emotes.items():
+            if payload.emoji.id == int(emote.split(':')[2]):
+                guild = self.bot.get_guild(payload.guild_id)
+                role = discord.utils.get(guild.roles, id=role_id)
+                user = discord.utils.get(guild.members, id=payload.user_id)
                 await user.remove_roles(role, reason=None, atomic=True)
                 print(f'Remove role {role.name} to member {user.name}')
             
