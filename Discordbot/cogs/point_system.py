@@ -30,24 +30,28 @@ class PointSystem(commands.Cog):
 
     @commands.Cog.listener()
     @commands.guild_only()
-    async def on_reaction_add(self, reaction, user):
-        if isinstance(reaction.emoji, str):
+    async def on_raw_reaction_add(self, payload):
+        channel = discord.utils.get(self.bot.get_guild(payload.guild_id).text_channels, id=payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if isinstance(payload.emoji, str):
             return
-        elif reaction.emoji.id == config.point_emote_id and not reaction.message.author == user:
-            bot_db.user_points_upsert(reaction.message.author.id, 'incr')
-            user_points = bot_db.get_user_points(reaction.message.author.id)
-            print(f'Incr. points for {reaction.message.author.name}. Now has {user_points["point_amount"]}')
+        elif payload.emoji.id == config.point_emote_id and not message.author.id == payload.user_id:
+            bot_db.user_points_upsert(message.author.id, 'incr')
+            user_points = bot_db.get_user_points(message.author.id)
+            print(f'Incr. points for {message.author.name}. Now has {user_points["point_amount"]}')
 
     
     @commands.Cog.listener()
     @commands.guild_only()
-    async def on_reaction_remove(self, reaction, user):
-        if isinstance(reaction.emoji, str):
+    async def on_raw_reaction_remove(self, payload):
+        channel = discord.utils.get(self.bot.get_guild(payload.guild_id).text_channels, id=payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if isinstance(payload.emoji, str):
             return
-        elif reaction.emoji.id == config.point_emote_id and not reaction.message.author == user:
-            bot_db.user_points_upsert(reaction.message.author.id, 'decr')
-            user_points = bot_db.get_user_points(reaction.message.author.id)
-            print(f'Decr. points for {reaction.message.author.name}. Now has {user_points["point_amount"]}')
+        elif payload.emoji.id == config.point_emote_id and not message.author.id == payload.user_id:
+            bot_db.user_points_upsert(message.author.id, 'decr')
+            user_points = bot_db.get_user_points(message.author.id)
+            print(f'Decr. points for {message.author.name}. Now has {user_points["point_amount"]}')
 
 
     @commands.command(name='update_points', aliases=['up'], help='Update all point values for all users.\nCan only be used by admins!\nUsage: `!update_points/!up`')
