@@ -7,7 +7,8 @@ import bot_db
 import config
 
 
-class PointSystem(commands.Cog):
+class PointSystem(commands.Cog, name='Point System'):
+    """This is the docstring"""
     def __init__(self, bot):
         self.bot = bot
 

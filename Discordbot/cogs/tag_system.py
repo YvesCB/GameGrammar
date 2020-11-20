@@ -6,6 +6,7 @@ import bot_db
 
 
 class TagSystem(commands.Cog, name='Tag system'):
+    """This is the docstring"""
     def __init__(self, bot):
         self.bot = bot
 

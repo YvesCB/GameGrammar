@@ -8,7 +8,9 @@ import config
 
 
 class ModSystem(commands.Cog, name='Modaration System'):
-
+    """This is the docstring"""
+    def __init__(self, bot):
+        self.bot = bot
     
     def create_sheet(self, ctx, _warns, member):
         embed = discord.Embed(

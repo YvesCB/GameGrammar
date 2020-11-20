@@ -6,18 +6,29 @@ import bot_db
 
 
 class AdminRoleSystem(commands.Cog, name='Admin role system'):
+    """Allows for existing Roles on the server to be added to or removed from a internal list of Admin Roles. Members with Admin Roles will be able to use all of the commands the bot supports. Only the Super Admin specified in the config can add and remove roles from this list."""
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='admins', aliases=['a'], help='Shows a list of all current admin roles.\nUsage: `!admins/!a`')
+    @commands.command(
+        name='admins', 
+        aliases=['a'], 
+        brief='Lists the Admin Roles.',
+        help='Shows a list of all current admin roles on the server. The list can only be modified by the Super Admin specified in the config file.\nUsage: `!admins/!a`',
+        usage='Usage: `!admins/!a`')
     @commands.guild_only()
     async def list_admins(self, ctx):
         admins = [admins['name'] for admins in bot_db.get_all_admin_roles()]
         await ctx.send(embed=bot_tools.create_list_embed(ctx=ctx, _title='Admin roles', _description='Here is a list of all the admin roles for GrammarBot on this server.', _field_name='Admin roles', items=admins))
 
 
-    @commands.command(name='admin_add', aliases=['a_add'], help='Adds a role to the list of admins.\nCan only be used by admins!\nUsage: `!admin_add/!a_add <role_name>`')
-    @bot_tools.is_admin()
+    @commands.command(
+        name='admin_add', 
+        aliases=['a_add'], 
+        brief='Add a role to the Admin Role list.',
+        help='Use this command to add a role form this server to the internal list of Admin Roles. Members with Admin Roles can user all commands. **Only the server owner can add roles to the list.**',
+        usage='Usage: `!admin_add/!a_add RoleName`')
+    @bot_tools.is_server_owner()
     @commands.guild_only()
     async def add_admin(self, ctx):
         try:
@@ -37,8 +48,13 @@ class AdminRoleSystem(commands.Cog, name='Admin role system'):
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` does not exist on this server.'))
 
 
-    @commands.command(name='admin_remove', aliases=['a_remove'], help='Removes a role from the list of admins.\nCan only be used by admins!\nUsage: `!admin_remove/!a_remove <role_name>`')
-    @bot_tools.is_admin()
+    @commands.command(
+        name='admin_remove', 
+        aliases=['a_remove'], 
+        brief='Remove a role from the Admin Role list.',
+        help='Use this command to remove a role form this server from the internal list of Admin Roles. Members with Admin Roles can user all commands. **Only the server owner can remove roles from the list.**',
+        usage='Usage: `!admin_remove/!a_remove RoleName`')
+    @bot_tools.is_super_admin()
     @commands.guild_only()
     async def remove_admin(self, ctx):
         try:

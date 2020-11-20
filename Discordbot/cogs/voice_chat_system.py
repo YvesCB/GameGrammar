@@ -6,6 +6,7 @@ import bot_db
 import config
 
 class VoiceSystem(commands.Cog):
+    """This is the docstring"""
     def __init__(self, bot):
         self.bot = bot
 

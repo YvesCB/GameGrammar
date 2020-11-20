@@ -125,6 +125,7 @@ def create_live_embed(user, title, game, live_views, follow_count, sub_count, vi
 
 
 class TwitchAPI(commands.Cog, name='Twitch API handling'):
+    """This is the docstring"""
     is_live = False
     went_live_at = 0
     

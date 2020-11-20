@@ -54,11 +54,17 @@ def create_eightball_embed(author, message):
 
 
 class ExtraStuff(commands.Cog, name='Extra fun stuff'):
+    """An assortment of additional commands mostly for fun. These are the commands and functions of GrammarBot that are a little random and that don't really fit in any other category."""
     def __init__(self, bot):
         self.bot = bot
 
 
-    @commands.command(name='magic_8ball', aliases=['m8b'], help='Ask the magic 8 Ball for advice!\nUsage: `!magic_8ball/!m8b <question>`')
+    @commands.command(
+        name='magic_8ball', 
+        aliases=['m8b'], 
+        brief='Ask the Magic 8-Ball a question.',
+        help='You can use this command to ask the Magic 8-Ball a question. Simply formulate your question after the command and the wise 8-Ball shall give you an answer. The answer are the official Magic 8-Ball answers.',
+        usage='Usage: `!magic_8ball/!m8b YourQuestion`')
     async def eightball(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)

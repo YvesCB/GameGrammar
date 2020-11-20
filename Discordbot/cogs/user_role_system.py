@@ -7,6 +7,7 @@ import bot_db
 
 
 class UserRoleSystem(commands.Cog, name='User Role System'):
+    """This is the docstring"""
     def __init__(self, bot):
         self.bot = bot
 

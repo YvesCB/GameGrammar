@@ -7,6 +7,7 @@ import config
 
 
 class StatsSystem(commands.Cog, name='Stats System'):
+    """This is the docstring"""
     count = 0
     
     def __init__(self, bot):
