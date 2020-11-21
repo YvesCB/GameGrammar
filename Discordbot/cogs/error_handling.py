@@ -7,6 +7,7 @@ import bot_tools
 
 
 class CommandErrorHandler(commands.Cog):
+    """0 Functionality for error handling."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -38,6 +39,9 @@ class CommandErrorHandler(commands.Cog):
 
         elif isinstance(error, bot_tools.AdminCheckFailure):
             return await ctx.send(embed=bot_tools.create_simple_embed(_title='Error', _description=f'{ctx.command} can only be used by admins.'))
+
+        elif isinstance(error, bot_tools.OwnerCheckFailure):
+            return await ctx.send(embed=bot_tools.create_simple_embed(_title='Error', _description=f'{ctx.command} can only be used by the server owner.'))
 
 
         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)

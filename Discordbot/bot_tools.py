@@ -29,6 +29,19 @@ class AdminCheckFailure(commands.CheckFailure):
     pass
 
 
+class OwnerCheckFailure(commands.CheckFailure):
+    pass
+
+
+def is_server_owner():
+    async def predicate(ctx):
+        is_owner_bool = ctx.author.id == ctx.guild.owner.id
+        if not is_admin_bool:
+            raise AdminCheckFailure()
+        return True
+    return commands.check(predicate)
+
+
 def is_admin():
     async def predicate(ctx):
         is_admin_bool = common_member([r['name'] for r in bot_db.get_all_admin_roles()], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id 
@@ -75,37 +88,6 @@ def grouped(iterable, n):
     "s -> (s0,s1,s2,...sn-1), (sn,sn+1,sn+2,...s2n-1), (s2n,s2n+1,s2n+2,...s3n-1), ..."
     return zip(*[iter(iterable)]*n)
 
-
-async def create_help_embed(ctx, cogs):
-    help_embed = discord.Embed(
-        title = 'Commands', 
-        description = 'Here are all the commands supported by GrammarBot',
-        color = discord.Color.blue()
-    )
-    help_embed.set_footer(
-        text=f'Requested by {ctx.author.name}'
-    )
-    for cog_name, cog in cogs.items():
-        if len(cog.get_commands()) == 0:
-            continue
-        value = []
-        commands = cog.get_commands()
-        for command in commands:
-            try:
-                await command.can_run(ctx)
-                al = ', !'.join(command.aliases)
-                value.append(f'**!{command.name}, !{al}**\n{command.help}\n\n')
-            except:
-                pass
-        if len(value) > 0:
-            value = ''.join(value)
-            help_embed.add_field(
-                name = cog_name,
-                value = f'{value}',
-                inline = False
-                )
-    return help_embed
-    
 
 def create_list_embed(ctx, _title, _description, _field_name, items):
     list_embed = discord.Embed(

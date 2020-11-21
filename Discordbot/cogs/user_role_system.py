@@ -6,7 +6,8 @@ import bot_tools
 import bot_db
 
 
-class UserRoleSystem(commands.Cog, name='User Role System'):
+class UserRoleSystem(commands.Cog, name='User Roles'):
+    """The bot will assign you the roles you want! You simply have to go to the <#759415738820853790> channel react with the emotes corresponding to the roles you would like to have. Removing the reaction will also remove the role from you. Setup for the roles and the role channel is also done via commands. That part is left to administrators though."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -51,14 +52,19 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
                 print(f'Removed role {role.name} from member {user.name}')
             
 
-    @commands.command(name='purge_role', aliases=['pr'], help='Removes the specified role from every user on the server.\nUsage: `!purge_role/!pr <role_name(s)>`')
     @bot_tools.is_admin()
     @commands.guild_only()
+    @commands.command(
+        name='purge_role', 
+        aliases=['pr'], 
+        brief='Remove the specified role(s) from every user on the server.',
+        help='This command can be used to purge a role from the server. That means that the specified role or multiple roles will be removed from every single member on the server that has said role. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!purge_role\!pr RoleName(s)`')
     async def purge_role(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except ValueError:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To purge roles from all users use `!purge_role <role_name(s)>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
 
         [_, roles] = command
@@ -87,14 +93,19 @@ class UserRoleSystem(commands.Cog, name='User Role System'):
         await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Purge Role', _description=f'Successfully purged the role(s) {roles_string}.'))
 
 
-    @commands.command(name='set_role_message', aliases=['srm'], help='Sets the channel and message for the reaction. If it is set already, it will overwrite after confirming with the user.\n Usage: `!set_role_message/!srm <channel_id> <message_id> `')
     @bot_tools.is_admin()
     @commands.guild_only()
+    @commands.command(
+        name='set_role_message', 
+        aliases=['srm'], 
+        brief='Set the message that the bot will use for users to select their roles.',
+        help='This command can be used to set or change the message used for the self-assignable roles. The channel and the message ID need to be specified, the bot will then automatically read the roles and emotes mentioned in the message and add the emotes as reactions. From then on, whenever a user reacts with one of the emotes, the bot will assign the corresponding role to the user and remove the role when the user removes the reaction. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!set_role_message\!srm ChannelID MessageID`')
     async def set_role_message(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except ValueError:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To set or change the role message id and channel id, please use `!set_role_message/!srm <message_id> <channel_id>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         
         [_, ch_id, msg_id] = command

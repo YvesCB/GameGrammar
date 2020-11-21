@@ -124,7 +124,8 @@ def create_live_embed(user, title, game, live_views, follow_count, sub_count, vi
     return embed
 
 
-class TwitchAPI(commands.Cog, name='Twitch API handling'):
+class TwitchAPI(commands.Cog, name='Twitch API'):
+    """There is a number of functionality that makes use of the Twitch API. The bot monitors when a GameGrammar stream goes live and will automatically post a message in the appropriate channel. You can also get some staticsts of the Twitch channel by using the Twitch stats command. This will include things like Follower count, Subscriber count, latest VOD and, if the stream is currently live, viewer count."""
     is_live = False
     went_live_at = 0
     
@@ -196,7 +197,12 @@ class TwitchAPI(commands.Cog, name='Twitch API handling'):
         return time.time() - self.went_live_at > 21600
 
 
-    @commands.command(name='twitch_stats', aliases=['ts'], help='Shows statistics of the GameGrammar Twitch channel.\nUsage: `!twitch_stats/!ts`')
+    @commands.command(
+        name='twitch_stats', 
+        aliases=['ts'], 
+        brief='Shows statistics of the GameGrammar Twitch channel.',
+        help='With this command you can at any point see information about the GameGrammar Twitch channel. Especially useful if you want a quick link to the channel or the lastes VOD.',
+        usage='Usage: `!twitch_stats\!ts`')
     @commands.guild_only()
     async def twitch_stats(self, ctx):
         data = json.loads(self.get_live_data())

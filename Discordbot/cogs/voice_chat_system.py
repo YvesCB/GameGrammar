@@ -5,7 +5,8 @@ import bot_tools
 import bot_db
 import config
 
-class VoiceSystem(commands.Cog):
+class VoiceSystem(commands.Cog, name='Voice Roles'):
+    """The bot will keep track of what voice channel you are in and assign you a corresponding role. That role will unlock a text channel that belongs to your current voice channel. This way, the conversations inside the text channels that pertain to discussions in voice chat stay somewhat private and additionally it reduces the amount of visible channels when you're not in voice chat. It also helps you to know which channel to use since there will only be one option. The set up for all of this also also done via commands that can be used by administrators."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -65,12 +66,17 @@ class VoiceSystem(commands.Cog):
     # Define a voice channel and text channel. Bot will set up a role that has permission to see said text channel and save that configuration.
     @commands.guild_only()
     @bot_tools.is_admin()
-    @commands.command(name='vc_role_add', aliases=['vr_add'], help='Add a role to a voice channel and corresponding text channel.\nUsage: `!vc_role_add/!vr_add <voice_ch_id> <text_ch_id>`')
+    @commands.command(
+        name='vc_role_add', 
+        aliases=['vr_add'], 
+        brief='Create a role that will link a voice chat to a text chat.',
+        help='This command will allow you to create a role that links a voice chat to a text chat. You specify the voice and text channels. The bot will then create a role that has the right permissions pre-set. You don\'t need to set up anything. A soon as this command has been used, users that join the voice chat will receive the role and the role then enables them to see and use the text channel specified. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!vc_role_add\!vr_add VoiceChID TextChID`')
     async def add_vc_role(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To add a new voice role please, use `!vc_role_add/!vc_add <voice_ch_id> <text_ch_id>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, vc_id, tc_id] = command
         vc_id = int(vc_id)
@@ -97,12 +103,17 @@ class VoiceSystem(commands.Cog):
 
     @commands.guild_only()
     @bot_tools.is_admin()
-    @commands.command(name='vc_role_remove', aliases=['vr_remove'], help='Remove a role that belongs to a voic/text pair (for example if the name of the voice/text channel changes or the voice/text channel is deleted).\nUsage: `!vc_role_add/!vr_add <voice_ch_id> <text_ch_id>`')
+    @commands.command(
+        name='vc_role_remove', 
+        aliases=['vr_remove'], 
+        brief='Remove a role that belongs to a voice chat.',
+        help='This command can be used to remove an existing role that has been linked to a voice chat and text chat. That role will no longer be applied to users in said voice chat. This command only works with roles that have previously been linked to a voice chat. **This command can only be used by a user with an admin role.**',
+        usage='Usage: `!vc_role_remove VoiceChID TextChID`')
     async def remove_vc_role(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To remove a voice/text role please, use `!vc_role_remove/!vr_remove <voice_ch_id>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, vc_id] = command
         vc_id = int(vc_id)
