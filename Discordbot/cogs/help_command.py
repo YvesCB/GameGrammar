@@ -118,6 +118,10 @@ class HelpCommmand(commands.Cog, name='Help'):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except:
+            try:
+                command = bot_tools.parse_command(ctx.message.content, 0)
+            except:
+                return
             right_arrow = '\U000027A1'
             left_arrow = '\U00002B05'
 
