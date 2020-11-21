@@ -7,7 +7,7 @@ import bot_db
 import config
 
 
-class ModSystem(commands.Cog, name='Modaration'):
+class ModSystem(commands.Cog, name='Moderation'):
     """Contains command and functionality concerning server moderation. This includes (for now) checking people's rap sheet, which is a quick overview of the most recent infractions, and warning people. Soon muting them for a given amount of time and banning them will be available as well."""
     def __init__(self, bot):
         self.bot = bot
