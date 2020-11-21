@@ -105,6 +105,7 @@ class HelpCommmand(commands.Cog, name='Help'):
         self.bot = bot
 
 
+    @commands.guild_only()
     @commands.command(
         name='help', 
         aliases=['?', 'h'], 
@@ -117,10 +118,10 @@ class HelpCommmand(commands.Cog, name='Help'):
         other_commands = [command for command in self.bot.commands if command.cog is None]
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
-        except:
+        except ValueError:
             try:
                 command = bot_tools.parse_command(ctx.message.content, 0)
-            except:
+            except ValueError:
                 return
             right_arrow = '\U000027A1'
             left_arrow = '\U00002B05'
@@ -129,8 +130,6 @@ class HelpCommmand(commands.Cog, name='Help'):
             current = 0
 
             help_message = await ctx.send(embed=embeds[current])
-            left_reaction = await help_message.add_reaction(left_arrow)
-            right_reaction = await help_message.add_reaction(right_arrow)
 
             def check(reaction, user):
                 return user == ctx.message.author and user != self.bot.user and (str(reaction.emoji) == right_arrow or left_arrow and reaction.message == help_message)
@@ -139,8 +138,6 @@ class HelpCommmand(commands.Cog, name='Help'):
                 try:
                     reaction, user = await self.bot.wait_for('reaction_add', timeout=600.0, check=check)
                 except asyncio.TimeoutError:
-                    await left_reaction.remove(self.bot.user)
-                    await right_reaction.remove(self.bot.user)
                     return
                 if str(reaction.emoji) == right_arrow:
                     if current < len(embeds) - 1:
