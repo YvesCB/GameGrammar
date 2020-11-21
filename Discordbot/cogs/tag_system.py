@@ -5,13 +5,18 @@ import bot_tools
 import bot_db
 
 
-class TagSystem(commands.Cog, name='Tag system'):
-    """This is the docstring"""
+class TagSystem(commands.Cog, name='Tags'):
+    """There are so-called \"Tags\" on the server you can use. A tag is simply a pre-written message that can be be posted by the bot. Each tag simply has a name and when called with post its contents. Some are text, others are pictures or vides. You can see the whole list by just using the tag command without an argument. Adding and removing of tags is limited to admins."""
     def __init__(self, bot):
         self.bot = bot
 
     
-    @commands.command(name='tag', aliases=['t'], help='Call pre-written messages called tags. Show list of tags if no tag is specified.\nUsage: `!tag/!t <name>`')
+    @commands.command(
+        name='tag', 
+        aliases=['t'], 
+        brief='Display the specified tag or show the list of tags when none specified.',
+        help='Use the tag command to either see the tags you can use or to make the bot display a specific tag. If you use the command without a tag name specified it will show you the list of tags. Some tags are used to post information that is frequently needed and some others are more for fun. Feel free to test them out but don\'t spam them.',
+        usage='Usage: `!tag\!t` or `!tag\!t TagName`')
     async def get_tag(self, ctx):
         try: 
             command = bot_tools.parse_command(ctx.message.content, 1)
@@ -19,7 +24,7 @@ class TagSystem(commands.Cog, name='Tag system'):
             try:
                 command = bot_tools.parse_command(ctx.message.content, 0)
             except:
-                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='All tags are one word only.'))
+                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
         if len(command) == 1:
             tags = [t['name'] for t in bot_db.get_all_tags()]
@@ -33,13 +38,18 @@ class TagSystem(commands.Cog, name='Tag system'):
                 await ctx.send(tag['response'])
 
 
-    @commands.command(name='tag_add', aliases=['t_add'], help='Add a new tag to the list of tags.\nCan only be used by admins!\nUsage: `!tag_add/!t_add <name> <message>`')
     @bot_tools.is_admin()
+    @commands.command(
+        name='tag_add', 
+        aliases=['t_add'], 
+        brief='Add a new tag to the list of available tags.',
+        help='With this command you can add a new tag to the list of tags available on the server. Make sure to give it a name and specify the content that it should have. It can be anything that you can write into the text bot. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!tag_add\!t_add TagName TagContent`')
     async def add_tag(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except ValueError:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To create tags, use `!tag_add/!t_add <name> <message>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, tag_name, tag_content] = command
         if bot_db.exists_tag(tag_name):
@@ -51,13 +61,18 @@ class TagSystem(commands.Cog, name='Tag system'):
 
 
 
-    @commands.command(name='tag_remove', aliases=['t_remove'], help='Remove an existing tag.\nCan only be used by admins!\nUsage: `!tag_remove/!t_remove <name>`')
     @bot_tools.is_admin()
+    @commands.command(
+        name='tag_remove', 
+        aliases=['t_remove'], 
+        brief='Remove one of the tags form the list of available tags.',
+        help='With this command you can remove one of the existing tags from the list of available tags. This is not reversable so be careful. If you delete a tag accidentally it will have to be added again manually. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!tag_remove\!t_remove TagName`')
     async def remove_tag(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except ValueError:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To remove a tag, use `!t_remove <name>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, tag_name] = command
         if not bot_db.exists_tag(tag_name):

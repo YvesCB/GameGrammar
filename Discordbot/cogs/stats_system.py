@@ -6,8 +6,8 @@ import bot_db
 import config
 
 
-class StatsSystem(commands.Cog, name='Stats System'):
-    """This is the docstring"""
+class StatsSystem(commands.Cog, name='Stats'):
+    """You can view a whole bunch of statistics about yourself, other users or the server itself. For now you can see some user stats like when a user joined the server or you can see stats about the server itself like the amount of users on it."""
     count = 0
     
     def __init__(self, bot):
@@ -103,49 +103,13 @@ class StatsSystem(commands.Cog, name='Stats System'):
         return embed
 
     
-    def create_leader_embed(self, points_dict, ctx):
-        point_sum = 0
-        for i, k in points_dict :
-            point_sum += k
-
-        embed = discord.Embed(
-            title = 'Grammar Point Leader Board',
-            description = f'See how you rank in terms of Grammar Points! A total of **{point_sum} Points** have been given on this server!',
-            color = discord.Color.blue()
-        )
-        embed.set_footer(text=f'Requested by {ctx.author.name}')
-        cnt = 1
-        author_rank = 0
-        author_points = 0
-
-        for i, k in points_dict:
-            member = ctx.guild.get_member(i)
-            try :
-                if member.id == ctx.author.id : 
-                    author_rank = cnt
-                    author_points = k
-                if cnt <= 20: 
-                    embed.add_field(
-                        name = f'Rank {cnt}: {member.name}',
-                        value = f'{k} Points!',
-                        inline = True
-                    )
-                cnt += 1
-            except : 
-                print("Skipped member on lb that is no longer on the server.")
-
-        if author_rank > 20 and author_rank != 0: 
-            embed.add_field(
-                name = f'Rank {author_rank}: {ctx.author.name}',
-                value = f'{author_points} Points!',
-                inline = True
-            )
-        return embed
-
-
-    
     @commands.guild_only()
-    @commands.command(name='user_info', aliases=['ui'], help='Displays the info for a user. Your own if none is specified.\nUsage: `!user_info/!ui <user_ping>`')
+    @commands.command(
+        name='user_info', 
+        aliases=['ui'], 
+        brief='Desplay the info for a user.',
+        help='Use this command to see some stats about a given user. It will show when the user account was created, when they joined this server and a bunch of other stats. If you don\'t specify a user via a ping or the ID then it will display your own info.',
+        usage=r'Usage: `!user_info\!ui (UserPing\UserID)`')
     async def user_info(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
@@ -153,7 +117,7 @@ class StatsSystem(commands.Cog, name='Stats System'):
             try:
                 command = bot_tools.parse_command(ctx.message.content, 0)
             except ValueError:
-                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Use `!user_info/!ui <ping>` or no ping to get your own.'))
+                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
         if len(command) == 1:
             member = ctx.guild.get_member(ctx.author.id)
@@ -174,22 +138,14 @@ class StatsSystem(commands.Cog, name='Stats System'):
         
 
     @commands.guild_only()
-    @commands.command(name='server_info', aliases=['si'], help='Displays the info for the server.\nUsage: `!server_info/!si`')
+    @commands.command(
+        name='server_info', 
+        aliases=['si'], 
+        brief='Display the server info.',
+        help='This command will show you some information about the server. This includes the number of users, the roles that exist, the server owner, the current voice chat server, when the server was created etc.',
+        usage='Usage: `!server_info\!si`')
     async def server_info(self, ctx):
         await ctx.send(embed=self.create_server_embed(ctx))
-
-    
-    @commands.guild_only()
-    @commands.command(name='leaderboard', aliases=['lb'], help='Displays the Grammar point Leaderboard for the server!\nUsage: `!leaderboard/!lb`')
-    async def leaderboard(self, ctx):
-        user_points = bot_db.get_all_user_points()
-        points_dict = {user_points[i]['id'] : user_points[i]['point_amount'] for i in range(0,len(user_points))}
-
-        points_dict = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
-        # for i, k in points_dict:
-        #     print(i, k)
-
-        await ctx.send(embed = self.create_leader_embed(points_dict, ctx))
 
 
 def setup(bot):

@@ -1,9 +1,11 @@
 import discord
+import asyncio
 from discord.ext import commands
 
 import bot_tools
 
 
+"""
 async def create_help_embed(ctx, cogs):
     help_embed = discord.Embed(
         title = 'Commands', 
@@ -33,17 +35,131 @@ async def create_help_embed(ctx, cogs):
                 inline = False
                 )
     return help_embed
+"""
+
+async def create_help_embeds(ctx, cogs, other_commands):
+    embeds = []
+    grouped_cogs = list(bot_tools.grouped(cogs, 3))
+    for cog_group in grouped_cogs:
+        embed = discord.Embed(
+            title = f'Help Page {grouped_cogs.index(cog_group) + 1}/{len(grouped_cogs)}',
+            description = 'Here\'s info about the Bot and the supported commands. Use `!help CommandName` to get more detailed info.',
+            color = discord.Color.blue()
+        )
+        embed.set_footer(
+            text=f'Requested by {ctx.author.name}. You can switch the page by reacting.'
+        )
+        for cog in cog_group:
+            commands = cog.get_commands()
+            command_string = ''
+            for command in commands:
+                try:
+                    await command.can_run(ctx)
+                    al = ', !'.join(command.aliases)
+                    command_string += f'**!{command.name}' + f'/!{al}**' + f'\n{command.brief}\n{command.usage}\n\n'
+                except:
+                    pass
+            
+            text = cog.description
+            text += f'\n\n{"".join(command_string)}'
+
+            embed.add_field(
+                name = f'**__{cog.qualified_name}__**',
+                value = f'{text}',
+                inline = False
+            )
+        embeds.append(embed)
+    
+    other_commands_text = '' 
+    for command in other_commands:
+        try:
+            await command.can_run(ctx)
+            al = ', !'.join(command.aliases)
+            other_commands_text += f'**!{command.name}' + f'/!{al}**' + f'\n{command.brief}\n{command.usage}\n\n'
+        except:
+            pass
+    
+    if len(other_commands_text) != 0:
+        embeds[-1].add_field(
+            name = '**__Other__**',
+            value = f'{other_commands_text}'
+        )
+    return embeds
 
 
-class HelpCommmand(commands.Cog, name='Help command'):
-    """This is the docstring"""
+def create_commmand_help_embed(ctx, command):
+    embed = discord.Embed(
+        title = f'Help for the `!{command.name}` command',
+        description = f'{command.help}\n\n{command.usage}',
+        color = discord.Color.blue()
+    )
+    embed.set_footer(
+        text=f'Requested by {ctx.author.name}.'
+    )
+    return embed
+
+
+class HelpCommmand(commands.Cog, name='Help'):
+    """The help command will show you how to use the bot and what functionality there is."""
     def __init__(self, bot):
         self.bot = bot
 
 
-    @commands.command(name='help', aliases=['?', 'h'], help='Displays the help message.\nUsage: `!help/!h/!?`')
+    @commands.command(
+        name='help', 
+        aliases=['?', 'h'], 
+        brief='Display the help message.',
+        help='This command will display the overview help message or the specific help message when a command is specified.',
+        usage='Usage: `!help/!h/!?` or `!help/!h/!? CommandName`')
     async def help_message(self, ctx):
-        await ctx.send('\n'.join([f'{command.name} {command.cog.qualified_name}' for command in self.bot.commands if command.cog is not None]))
+        cogs = [cog for cog in self.bot.cogs.values() if cog.description[0] != '0']
+        cogs = sorted(cogs, key=lambda x: x.qualified_name)
+        other_commands = [command for command in self.bot.commands if command.cog is None]
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except:
+            right_arrow = '\U000027A1'
+            left_arrow = '\U00002B05'
+
+            embeds = await create_help_embeds(ctx, cogs, other_commands)
+            current = 0
+
+            help_message = await ctx.send(embed=embeds[current])
+            left_reaction = await help_message.add_reaction(left_arrow)
+            right_reaction = await help_message.add_reaction(right_arrow)
+
+            def check(reaction, user):
+                return user == ctx.message.author and user != self.bot.user and (str(reaction.emoji) == right_arrow or left_arrow and reaction.message == help_message)
+
+            while(True):
+                try:
+                    reaction, user = await self.bot.wait_for('reaction_add', timeout=600.0, check=check)
+                except asyncio.TimeoutError:
+                    await left_reaction.remove(self.bot.user)
+                    await right_reaction.remove(self.bot.user)
+                    return
+                if str(reaction.emoji) == right_arrow:
+                    if current < len(embeds) - 1:
+                        current += 1
+                        await help_message.edit(embed=embeds[current])
+                    await reaction.remove(user)
+                elif str(reaction.emoji) == left_arrow:
+                    if current > 0:
+                        current -= 1
+                        await help_message.edit(embed=embeds[current])
+                    await reaction.remove(user)
+    
+        [_, command_name] = command
+        command_name = command_name.replace('!','').replace('`','')
+        requested_command = discord.utils.get(self.bot.commands, name=command_name)
+        if requested_command is None:
+            for command in self.bot.commands:
+                if command_name in command.aliases:
+                    requested_command = command
+            if requested_command is None:
+                await ctx.send(embed=bot_tools.create_simple_embed(ctx, 'Error', f'Not a recoginzed command. {ctx.command.usage}'))
+                return
+        await ctx.send(embed=create_commmand_help_embed(ctx, requested_command))
 
 
 def setup(bot):

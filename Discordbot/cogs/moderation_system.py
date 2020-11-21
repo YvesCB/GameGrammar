@@ -7,8 +7,8 @@ import bot_db
 import config
 
 
-class ModSystem(commands.Cog, name='Modaration System'):
-    """This is the docstring"""
+class ModSystem(commands.Cog, name='Modaration'):
+    """Contains command and functionality concerning server moderation. This includes (for now) checking people's rap sheet, which is a quick overview of the most recent infractions, and warning people. Soon muting them for a given amount of time and banning them will be available as well."""
     def __init__(self, bot):
         self.bot = bot
     
@@ -44,12 +44,17 @@ class ModSystem(commands.Cog, name='Modaration System'):
 
     @commands.guild_only()
     @bot_tools.is_admin()
-    @commands.command(name='warn', aliases=['w'], help='Warns a user and stores the warning message, channel and time.\nUsage: `!warn/!w <user_ping>`')
+    @commands.command(
+        name='warn', 
+        aliases=['w'], 
+        brief='Warn a user and log the warning.',
+        help='This command allows you to warn a user when they break a rule or misbehave. The warning will be logged in the logging channel and it will be saved in the user\'s rap sheet which can be viewed with the rap sheet command. **This command can only be used by people with an admin role.**',
+        usage='Usage: `!warn/!w UserPing/UserID WarningMessage`')
     async def warn(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Use `!warn/w <user_ping> <warn message>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         
         [_, mention, warn_message] = command
@@ -75,12 +80,17 @@ class ModSystem(commands.Cog, name='Modaration System'):
 
     @commands.guild_only()
     @bot_tools.is_admin()
-    @commands.command(name='remove_warning', aliases=['rw'], help='Removes the specified warning from the user\'s Rap Sheet.\nUsage: `!remove_warning/!rw <user_ping> <number>`')
+    @commands.command(
+        name='remove_warning', 
+        aliases=['rw'], 
+        brief='Remove a given warning from the user.',
+        help='This command will remove the specified warning from the user\'s list of warnings. The warning list can be found in the user\'s rap sheet. Use the number listed in the sheet to see which warning to remove. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!remove_warning/!rw UserPing/UserID WarningNumber`')
     async def rem_warn(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Use `!remove_warning/rw <number>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
 
         [_, mention, number] = command
@@ -97,7 +107,7 @@ class ModSystem(commands.Cog, name='Modaration System'):
             return
 
         if not number.isdigit():
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Use `!remove_warning/rw <number>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help{ctx.command.name}` for more details.'))
             return
         
         if bot_db.remove_warning(user_id, int(number)):
@@ -108,12 +118,17 @@ class ModSystem(commands.Cog, name='Modaration System'):
 
     @commands.guild_only()
     @bot_tools.is_admin()
-    @commands.command(name='rap_sheet', aliases=['rs'], help='Displays the user\'s rap sheet with a list of warnings and mutes.\nUsage: `!rap_sheet/!rs <user_ping>`')
+    @commands.command(
+        name='rap_sheet', 
+        aliases=['rs'], 
+        brief='Display the rap sheet of the specified user.',
+        help='This command will show you the rap sheet of the specified user. The rap sheet is a summary of the user\'s past recieved warnings, mutes and bans. The rap sheet serves as an overview of the user\'s behaviour on the server. **This command can only be used by users with an admin role.**',
+        usage='Usage: `!rap_sheet/!rs UserPing/UserID`')
     async def rap_sheet(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Use `!rap_sheet/rs <user_ping>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
 
         [_, mention] = command

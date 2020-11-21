@@ -69,7 +69,7 @@ class ExtraStuff(commands.Cog, name='Extra fun stuff'):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
         except:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='To ask the 8 Ball a question, make sure to add your question after the command. `!magic_8ball/!m8b <question>`.'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
 
         [_, message] = command

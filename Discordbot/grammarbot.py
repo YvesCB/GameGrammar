@@ -44,7 +44,12 @@ async def on_message(message):
 
 
 @bot_tools.is_admin()
-@bot.command(name='reload', aliases=['rl'], help='Reloads all the cogs.\nUsage:')
+@bot.command(
+        name='reload', 
+        aliases=['rl'], 
+        brief='Reload the cogs.',
+        help='This command allows you to reload all the cogs. This means that if any changes were made to the code, then doing this can apply those changes without having to restart the bot. **This command can only be used by a user with an admin role.**',
+        usage='Usage: `!reload\!rl`')
 async def relaod(ctx):
     cogs = ''
     for filename in os.listdir('./cogs'):
