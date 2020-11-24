@@ -9,7 +9,7 @@ import config
 
 
 class ModSystem(commands.Cog, name='Moderation'):
-    """Contains command and functionality concerning server moderation. This includes (for now) checking people's rap sheet, which is a quick overview of the most recent infractions, and warning people. Soon muting them for a given amount of time and banning them will be available as well."""
+    """Contains command and functionality concerning server moderation. This includes warning, muting and baning people and checking people's rap sheet, which is a quick overview of the most recent infractions, warnings, mutes and bans."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -89,7 +89,7 @@ class ModSystem(commands.Cog, name='Moderation'):
         aliases=['w'], 
         brief='Warn a user and log the warning.',
         help='This command allows you to warn a user when they break a rule or misbehave. The warning will be logged in the logging channel and it will be saved in the user\'s rap sheet which can be viewed with the rap sheet command. **This command can only be used by people with an admin role.**',
-        usage='Usage: `!warn/!w UserPing/UserID WarningMessage`')
+        usage='Usage: `!warn/!w UserPing/UserID WarnMsg`')
     async def warn(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
@@ -127,7 +127,7 @@ class ModSystem(commands.Cog, name='Moderation'):
         aliases=['m'],
         brief='Mute a user for a given amount of time.',
         help='This command can be used to mute a user for a specified amount of time. To specify the muted time please use a number followed by either the letter d for day, h for hour or m for minute. Only chose one and don\'t combine different time units. For example you can specify 10 hours as 10h but don\'t use 10h20m to combine hours and minutes. The user will receive the muted role for the time frame specified and will be unable to post messages, react to messages or join voice chats.',
-        usage='Usage: `!warn/!w UserPing/UserID TimeAmount MuteReasonMessage`'
+        usage='Usage: `!warn/!w UserPing/UserID Time Reason`'
     )
     async def mute(self, ctx):
         try:
@@ -210,8 +210,8 @@ class ModSystem(commands.Cog, name='Moderation'):
         name='ban',
         aliases=['b'],
         brief='Ban a member from the server for a specified amount of time.',
-        help='This command can be used to ban a member from the server. You can specify a time for how long the member should stay banned. Use the letters d for day, h for hour and m for minute. Do not mix time formats. If that time ellapses, the member will be unbanned and is free to rejoin the server. If `perma` is used as a time, then the member will be permanentally banned.',
-        usage=r'Usage: `!ban\!b UserPing\UserID TimeAmount MessageDeleteDays BanReason`'
+        help='This command can be used to ban a member from the server. You can specify a time for how long the member should stay banned. Use the letters d for day, h for hour and m for minute. Do not mix time formats. If that time ellapses, the member will be unbanned and is free to rejoin the server. If `perma` is used as a time, then the member will be permanentaly banned.',
+        usage=r'Usage: `!ban\!b UserPing\UserID Time MsgDelDays Reason`'
     )
     async def ban(self, ctx):
         try:
@@ -298,9 +298,9 @@ class ModSystem(commands.Cog, name='Moderation'):
     @commands.command(
         name='remove_warning', 
         aliases=['rw'], 
-        brief='Remove a given warning from the user.',
+        brief='Remove a warning from the user.',
         help='This command will remove the specified warning from the user\'s list of warnings. The warning list can be found in the user\'s rap sheet. Use the number listed in the sheet to see which warning to remove. **This command can only be used by users with an admin role.**',
-        usage='Usage: `!remove_warning/!rw UserPing/UserID WarningNumber`')
+        usage='Usage: `!remove_warning/!rw UserPing/UserID WarnNum`')
     async def rem_warn(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 2)
@@ -336,9 +336,9 @@ class ModSystem(commands.Cog, name='Moderation'):
     @commands.command(
         name='remove_mute',
         aliases=['rm'],
-        brief='Remove a given mute from the user.',
+        brief='Remove a mute from the user.',
         help='This command can be used to remove a mute entry from the User\'s rap sheet and the internal database. This is mostly to remove accidental, wrong or test entries. To specify the entry to remove, use the number that is shown for the entry on the rap sheet.',
-        usage='Usage: `!remove_mute/!rm UserPing/UserID MuteNumber`'
+        usage='Usage: `!remove_mute/!rm UserPing/UserID MuteNum`'
     )
     async def rem_mute(self, ctx):
         try:
@@ -375,9 +375,9 @@ class ModSystem(commands.Cog, name='Moderation'):
     @commands.command(
         name='remove_ban',
         aliases=['rb'],
-        brief='Remove a given ban from the user.',
+        brief='Remove a ban from the user.',
         help='This command can be used to remove a ban entry from the User\'s rap sheet and the internal database. This is mostly to remove accidental, wrong or test entries. To specify the entry to remove, use the number that is shown for the entry on the rap sheet.',
-        usage=r'Usage: `!remove_ban/!rb UserPing/UserID BanNumber`'
+        usage=r'Usage: `!remove_ban/!rb UserPing/UserID BanNum`'
     )
     async def rem_ban(self, ctx):
         try:
@@ -414,7 +414,7 @@ class ModSystem(commands.Cog, name='Moderation'):
     @commands.command(
         name='rap_sheet', 
         aliases=['rs'], 
-        brief='Display the rap sheet of the specified user.',
+        brief='Display the rap sheet of the user.',
         help='This command will show you the rap sheet of the specified user. The rap sheet is a summary of the user\'s past recieved warnings, mutes and bans. The rap sheet serves as an overview of the user\'s behaviour on the server. **This command can only be used by users with an admin role.**',
         usage='Usage: `!rap_sheet/!rs UserPing/UserID`')
     async def rap_sheet(self, ctx):

@@ -8,7 +8,7 @@ import config
 
 
 class PointSystem(commands.Cog, name='Points'):
-    """There is a point system on this server. You can give other people points when they post something useful, interesting or fun. The way you do this is by reaction to their message with the <:gamepad:602902421924085771> emote from this server. If you do that, a \"GrammarPoint\" will be added to the points of the user that posted the message. You cannot allot points to your own messages! Also, removing the reaction will also take away the point. This is to prevent points from being spammable. You get as many points as users react to your message. There is a leaderboard for the points you can check out via the leaderboard command. As of right now, the points are just a way of measuring appreciation but they might get other features in the future."""
+    """There is a point system on this server. You can give other people points when they post something useful, interesting or fun. The way you do this is by reaction to their message with the <:gamepad:602902421924085771> emote from this server. If you do that, a \"GrammarPoint\" will be added to the points of the user that posted the message. You get as many points as users react to your message. There is a leaderboard for the points you can check out via the leaderboard command."""
     def __init__(self, bot):
         self.bot = bot
 

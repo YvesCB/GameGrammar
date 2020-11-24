@@ -39,11 +39,11 @@ async def create_help_embed(ctx, cogs):
 
 async def create_help_embeds(ctx, cogs, other_commands):
     embeds = []
-    grouped_cogs = list(bot_tools.grouped(cogs, 3))
+    grouped_cogs = list(bot_tools.grouped(cogs, 2))
     for cog_group in grouped_cogs:
         embed = discord.Embed(
             title = f'Help Page {grouped_cogs.index(cog_group) + 1}/{len(grouped_cogs)}',
-            description = 'Here\'s info about the Bot and the supported commands. Use `!help CommandName` to get more detailed info.',
+            description = 'Use `!help CommandName` to get more detailed info.',
             color = discord.Color.blue()
         )
         embed.set_footer(
