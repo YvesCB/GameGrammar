@@ -130,7 +130,7 @@ def get_user_points(user_id):
     if len(points) > 0:
         return points[0]
     else:
-        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': [], 'mutes': []})
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': [], 'mutes': [], 'bans': []})
         points = db_user_data.search(User_data.id == user_id)
         return points[0]
 
@@ -143,7 +143,7 @@ def user_points_upsert(user_id, incrdecr):
     elif len(points) > 0 and incrdecr == 'decr':
         db_user_data.update(operations.decrement('point_amount'), User_data.id == user_id)
     else:
-        db_user_data.insert({'id': user_id, 'point_amount': 1, 'warnings': [], 'mutes': []})
+        db_user_data.insert({'id': user_id, 'point_amount': 1, 'warnings': [], 'mutes': [], 'bans': []})
 
 
 def user_points_update(user_id, point_amount):
@@ -153,7 +153,7 @@ def user_points_update(user_id, point_amount):
         db_user_data.update(operations.set('point_amount', point_amount), User_data.id == user_id)
         print(f'Updated {user_id}')
     elif len(points) == 0 and point_amount > 0:
-        db_user_data.insert({'id': user_id, 'point_amount': point_amount, 'warnings': [], 'mutes': []})
+        db_user_data.insert({'id': user_id, 'point_amount': point_amount, 'warnings': [], 'mutes': [], 'bans': []})
         print(f'Inserted {user_id}')
 
 
@@ -170,6 +170,28 @@ def get_user_warnings(user_id):
         return None
 
 
+def get_user_mutes(user_id):
+    User_mutes = Query()
+    mutes = db_user_data.search(User_mutes.id == user_id)
+    if len(mutes) > 0:
+        return mutes[0]['mutes']
+    else:
+        return None
+
+
+def get_user_bans(user_id):
+    User_mutes = Query()
+    data = db_user_data.search(User_mutes.id == user_id)
+    if len(data) > 0:
+        if 'bans' in data[0].keys():
+            return data[0]['bans']
+        else:
+            db_user_data.update({'bans': []})
+            return None 
+    else:
+        return None
+
+
 def add_warning(user_id, warning):
     User_data = Query()
     warns = db_user_data.search(User_data.id == user_id)
@@ -178,7 +200,29 @@ def add_warning(user_id, warning):
         warnings.extend(warns[0]['warnings'])
         db_user_data.update(operations.set('warnings', warnings), User_data.id == user_id)
     else:
-        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': warnings, 'mutes': []})
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': warnings, 'mutes': [], 'bans': []})
+
+
+def add_mute(user_id, mute):
+    User_data = Query()
+    mutes = db_user_data.search(User_data.id == user_id)
+    mutes_new = [mute]
+    if len(mutes) > 0:
+        mutes_new.extend(mutes[0]['mutes'])
+        db_user_data.update(operations.set('mutes', mutes_new), User_data.id == user_id)
+    else:
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': [], 'mutes': mutes_new, 'bans': []})
+
+
+def add_ban(user_id, ban):
+    User_data = Query()
+    bans = db_user_data.search(User_data.id == user_id)
+    bans_new = [ban]
+    if len(bans) > 0:
+        bans_new.extend(bans[0]['bans'])
+        db_user_data.update(operations.set('bans', bans_new), User_data.id == user_id)
+    else:
+        db_user_data.insert({'id': user_id, 'point_amount': 0, 'warnings': [], 'mutes': [], 'bans': bans_new})
 
 
 def remove_warning(user_id, warning_number):
@@ -189,6 +233,36 @@ def remove_warning(user_id, warning_number):
         if len(warns) >= warning_number:
             del warns[warning_number - 1]
             db_user_data.update(operations.set('warnings', warns), User_data.id == user_id)
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def remove_mute(user_id, mute_number):
+    User_data = Query()
+    mutes = db_user_data.search(User_data.id == user_id)
+    if len(mutes) > 0:
+        mutes = mutes[0]['mutes']
+        if len(mutes) >= mute_number:
+            del mutes[mute_number - 1]
+            db_user_data.update(operations.set('mutes', mutes), User_data.id == user_id)
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def remove_ban(user_id, ban_number):
+    User_data = Query()
+    bans = db_user_data.search(User_data.id == user_id)
+    if len(bans) > 0:
+        bans = bans[0]['bans']
+        if len(bans) >= ban_number:
+            del bans[ban_number - 1]
+            db_user_data.update(operations.set('bans', bans), User_data.id == user_id)
             return True
         else:
             return False

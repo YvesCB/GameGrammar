@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks
 import random
 import os
+from datetime import datetime
 
 
 import config
@@ -27,8 +28,18 @@ async def on_ready():
 @bot.event
 async def on_member_join(member):
     guild = discord.utils.get(bot.guilds, name=config.discord_guild)
-    channel = discord.utils.get(guild.channels, id=410321201395924992)
+    channel = discord.utils.get(guild.channels, id=config.welcome_ch_id)
     msg = random.choice(bot_tools.welcome_messages).replace('<user>', f'<@{member.id}>')
+    mutes = bot_db.get_user_mutes(member.id)
+    if mutes is not None:
+        for mute in mutes:
+            now = datetime.utcnow()
+            until = datetime.strptime(mute['until'], "%a, %d %b %Y, %H:%M:%S GMT")
+            log_channel = discord.utils.get(member.guild.channels, id=config.log_channel_id)
+            if now < until:
+                await member.add_roles(discord.utils.get(member.guild.roles, id=config.mute_role_id), reason=None, atomic=True)
+                await log_channel.send(f'Member <@{member.id}> tried to rejoin to get unmuted. Mute role was attached to them again until the unmute time has come.')
+                return
     await channel.send(f'{msg}\nThere are a few Roles you can assign yourself. Check out <#759415738820853790>!\n自分にロールをつけることもできます。 <#759415738820853790> をチェックしてください！')
 
 
