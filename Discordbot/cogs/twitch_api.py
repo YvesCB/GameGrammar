@@ -223,7 +223,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             viewer_count = data['data'][0]['viewer_count']
             follow_count = follows['total']
             sub_count = len(subs['data'])
-            viewer_count = user_info['data'][0]['view_count']
+            view_count = user_info['data'][0]['view_count']
             thumb_url = data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
 
             await ctx.send(
@@ -234,7 +234,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                     viewer_count,
                     follow_count,
                     sub_count,
-                    viewer_count,
+                    view_count,
                     thumb_url
                 )
             )
