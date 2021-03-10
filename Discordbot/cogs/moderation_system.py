@@ -1,7 +1,6 @@
 import discord
-import time
 from datetime import datetime, timedelta
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import bot_tools
 import bot_db
@@ -10,30 +9,46 @@ import config
 
 class ModSystem(commands.Cog, name='Moderation'):
     """Contains command and functionality concerning server moderation. This includes warning, muting and baning people and checking people's rap sheet, which is a quick overview of the most recent infractions, warnings, mutes and bans."""
+
     def __init__(self, bot):
         self.bot = bot
+        self.unban_unmute.start()
 
     
-    def create_sheet(self, ctx, _warns, _mutes, _bans, member):
-        embed = discord.Embed(
-            title = f'Rap Sheet of {member.name} ({member.id})',
-            description = 'All the infractions of the selected user.',
-            color = discord.Color.blue()
-        )
-        embed.set_thumbnail(url=member.avatar_url)
+    def create_sheet(self, ctx, _warns, _mutes, _bans, user, user_id, user_name):
+        if user is not None:
+            embed = discord.Embed(
+                title = f'Rap Sheet of {user.name} ({user.id})',
+                description = f'All the infractions of the selected user <@{user.id}>',
+                color = discord.Color.blue()
+            )
+            embed.set_thumbnail(url=user.avatar_url)
+        else:
+            embed = discord.Embed(
+                title = f'Rap Sheet of {user_name} ({user_id})',
+                description = 'All the infractions of the selected user. This user has deleted their account.',
+                color = discord.Color.blue()
+            )
 
-        if len(_warns) == 0:
+        if len(_warns) == len(_mutes) == len(_bans) == 0:
             embed.add_field(
-                name = 'Warnings',
-                value = 'None',
+                name = 'Infractions',
+                value = 'Nothing has been logged for this user.',
                 inline = False
             )
-        else:
+            return embed
+
+        now = datetime.utcnow()
+        latest = datetime.min
+
+        if len(_warns) > 0:
             warnings = ''
             cnt = 1
             for warning in _warns:
-                warnings += f'**{cnt}:** {warning["message"]}\n{warning["time"]} **in** <#{warning["channel"]}>\n'
+                warnings += f'**{cnt}:** \"{warning["message"]}\" by <@{warning["mod_id"]}>\n{warning["time"].strftime("%d %b %y, %H:%M:%S GMT")} **in** <#{warning["channel"]}>\n'
                 cnt += 1
+                if warning['time'] > latest:
+                    latest = warning['time']
 
             embed.add_field(
                 name = f'{len(_warns)} Warning(s)',
@@ -41,18 +56,14 @@ class ModSystem(commands.Cog, name='Moderation'):
                 inline = False
             )
 
-        if len(_mutes) == 0:
-            embed.add_field(
-                name = 'Mutes',
-                value = 'None',
-                inline = False
-            )
-        else:
+        if len(_mutes) > 0:
             mutes = ''
             cnt = 1
             for mute in _mutes:
-                mutes += f'**{cnt}:** {mute["message"]}\n{mute["time"]} **in** <#{mute["channel"]}>\nMuted for {mute["amount"]}\n'
+                mutes += f'**{cnt}:** \"{mute["message"]}\" by <@{mute["mod_id"]}>\n{mute["time"].strftime("%d %b %y, %H:%M:%S GMT")} **in** <#{mute["channel"]}>\nMuted for {mute["amount"]}\n'
                 cnt += 1
+                if mute['time'] > latest:
+                    latest = mute['time']
 
             embed.add_field(
                 name = f'{len(_mutes)} Mute(s)',
@@ -60,23 +71,59 @@ class ModSystem(commands.Cog, name='Moderation'):
                 inline = False
             )
 
-        if len(_bans) == 0:
-            embed.add_field(
-                name = 'Bans',
-                value = 'None',
-                inline = False
-            )
-        else:
+        if len(_bans) > 0:
             bans = ''
             cnt = 1
             for ban in _bans:
-                bans += f'**{cnt}:** {ban["message"]}\n{ban["time"]} **in** <#{ban["channel"]}>\nBanned for {ban["amount"]}\n'
+                bans += f'**{cnt}:** \"{ban["message"]}\" by <@{ban["mod_id"]}>\n{ban["time"].strftime("%d %b %y, %H:%M:%S GMT")} **in** <#{ban["channel"]}>\nBanned for {ban["amount"]}\n'
                 cnt += 1
+                if ban['time'] > latest:
+                    latest = ban['time']
 
             embed.add_field(
                 name = f'{len(_bans)} Ban(s)',
                 value = bans,
                 inline = False
+            )
+
+        member = discord.utils.get(ctx.guild.members, id=user_id)
+        if member is not None:
+            embed.add_field(
+                name = 'Joined Server',
+                value = member.joined_at.strftime("%d %b %y, %H:%M:%S GMT"),
+                inline = True
+            )
+        else:
+            embed.add_field(
+                name = 'Joined Server',
+                value = 'Currently not on server',
+                inline = True
+            )
+
+        if latest != datetime.min:
+            latest = (now - latest).seconds
+            timestring = ''
+            days, remainder = divmod(latest, 86400)
+            hours, remainder = divmod(remainder, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            if days != 0:
+                timestring += f'{days}d '
+            if hours != 0 or len(timestring) != 0:
+                timestring += f'{hours}h '
+            if minutes != 0 or len(timestring) != 0:
+                timestring += f'{minutes}m '
+            if seconds != 0 or len(timestring) != 0:
+                timestring += f'{seconds}s'
+            embed.add_field(
+                name = 'Time since latest action',
+                value = timestring,
+                inline = True
+            )
+        else:
+            embed.add_field(
+                name = 'Time since latest action',
+                value = 'Never',
+                inline = True
             )
 
         return embed
@@ -98,7 +145,6 @@ class ModSystem(commands.Cog, name='Moderation'):
             return
         
         [_, mention, warn_message] = command
-        warn_message = f'\"{warn_message}\" by <@{ctx.message.author.id}>'
         user_id = 0
         try: 
             user_id = int(mention.replace('<@', '').replace('>', '').replace('!', ''))
@@ -106,18 +152,26 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        if discord.utils.get(ctx.guild.members, id=user_id) == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
+        user = await self.bot.fetch_user(user_id)
+
+        now = datetime.utcnow()
+
+        if user is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a valid user!'))
             return
 
         log_channel = discord.utils.get(ctx.guild.channels, id=config.log_channel_id)
 
-        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Warning', _description=f'Warning <@{user_id}> ({discord.utils.get(ctx.guild.members, id=user_id).name}: {user_id}) in <#{ctx.message.channel.id}>\n**Warning:**\n{warn_message}'))
+        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Warning', _description=f'Warning <@{user_id}> ({user.name}: {user_id}) in <#{ctx.message.channel.id}>\n**Warning:**\n\"{warn_message}\" by <@{ctx.message.author.id}>'))
 
         await ctx.send(f'Warning logged.')
 
-        warning = {'message': warn_message, 'time': time.strftime("%a, %d %b %Y, %H:%M:%S GMT", time.gmtime()), 'channel': ctx.message.channel.id}
-        bot_db.add_warning(user_id, warning)
+        user_info = bot_db.user_get({'_id': user_id})
+        if user_info is None:
+            user_info = bot_db.user_new(user_id, user.name)
+
+        warning = {'message': warn_message, 'mod_id': ctx.message.author.id, 'time': now, 'channel': ctx.message.channel.id}
+        bot_db.user_update(action='push', filter={'_id': user_id}, list_name='warnings', new_value=warning)
 
     
     @commands.guild_only()
@@ -127,7 +181,7 @@ class ModSystem(commands.Cog, name='Moderation'):
         aliases=['m'],
         brief='Mute a user for a given amount of time.',
         help='This command can be used to mute a user for a specified amount of time. To specify the muted time please use a number followed by either the letter d for day, h for hour or m for minute. Only chose one and don\'t combine different time units. For example you can specify 10 hours as 10h but don\'t use 10h20m to combine hours and minutes. The user will receive the muted role for the time frame specified and will be unable to post messages, react to messages or join voice chats.',
-        usage='Usage: `!warn/!w UserPing/UserID Time Reason`'
+        usage='Usage: `!mute/!m UserPing/UserID Time Reason`'
     )
     async def mute(self, ctx):
         try:
@@ -140,7 +194,6 @@ class ModSystem(commands.Cog, name='Moderation'):
 
         error_embed = bot_tools.create_simple_embed(ctx, 'Erorr', f'Not a valid time format. Chose only one from days, hours, minutes. Don\'t mix them. Use `!help {ctx.command.name}` for more details.')
 
-        mute_message = f'\"{mute_message}\" by <@{ctx.message.author.id}>'
         user_id = 0
         try: 
             user_id = int(mention.replace('<@', '').replace('>', '').replace('!', ''))
@@ -148,10 +201,19 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        member = discord.utils.get(ctx.guild.members, id=user_id)
-        if member == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
+        user = await self.bot.fetch_user(user_id)
+
+        now = datetime.utcnow()
+
+        if user is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a valid user!'))
             return
+
+        if user not in ctx.guild.members:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not on this server and can thus not be muted!'))
+            return
+
+        member = discord.utils.get(ctx.guild.members, id=user.id)
 
         mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
         log_channel = discord.utils.get(ctx.guild.channels, id=config.log_channel_id)
@@ -179,29 +241,37 @@ class ModSystem(commands.Cog, name='Moderation'):
                 delta_string = f'{time_amount} Minute(s)'
             else:
                 await ctx.send(embed=error_embed)
+                return
         else:
             await ctx.send(embed=error_embed)
+            return
 
-        new_time = datetime.utcnow() + delta
+        new_time = now + delta
 
-        await ctx.send(f'Muting {member.name} until {time.strftime("%a, %d %b %Y, %H:%M:%S GMT", new_time.timetuple())}.')
-        await member.add_roles(mute_role, reason=None, atomic=True)
+        await ctx.send(f'Muting {member.name} until {new_time.strftime("%d %b %y, %H:%M:%S GMT")}.')
+        await member.add_roles(mute_role, reason=f'Muted by {ctx.message.author.name}', atomic=True)
 
-        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Muting', _description=f'Muting <@{user_id}> ({member.name}: {user_id}) in <#{ctx.message.channel.id}> Until {time.strftime("%a, %d %b %Y, %H:%M:%S GMT", new_time.timetuple())}\n**Reason:**\n{mute_message}'))
+        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Muting', _description=f'Muting <@{user_id}> ({member.name}: {user_id}) in <#{ctx.message.channel.id}> until {new_time.strftime("%d %b %y, %H:%M:%S GMT")}\n**Reason:**\n\"{mute_message}\" by <@{ctx.message.author.id}>'))
 
-        muting = {'message': mute_message, 'time': time.strftime("%a, %d %b %Y, %H:%M:%S GMT", time.gmtime()), 'amount': delta_string, 'until': time.strftime("%a, %d %b %Y, %H:%M:%S GMT", new_time.timetuple()), 'channel': ctx.message.channel.id}
-        bot_db.add_mute(user_id, muting)
+        user_info = bot_db.user_get({'_id': user_id})
+        if user_info is None:
+            user_info = bot_db.user_new(user_id, member.name)
 
-        await discord.utils.sleep_until(new_time)
+        muting = {'message': mute_message, 'mod_id': ctx.message.author.id, 'time': now, 'amount': delta_string, 'until': new_time, 'channel': ctx.message.channel.id}
+        bot_db.user_update(action='push', filter={'_id': user_id}, list_name='mutes', new_value=muting)
 
-        # update member just in case
-        member = discord.utils.get(ctx.guild.members, id=user_id)
-        if member is not None:  
-            await log_channel.send(f'Unmuting <@{user_id}>.')
-            await member.remove_roles(mute_role, reason=None, atomic=True)
-        else:
-            # Member most likely left the server
-            await log_channel.send(f'Tried to unmute member <@{user_id}> but they are no longer on the server.')
+
+        bot_db.server_update(action='push', list_name='unmute_queue', new_value={'time': new_time, 'id': user_id})
+        # await discord.utils.sleep_until(new_time)
+
+        # # update member just in case
+        # member = discord.utils.get(ctx.guild.members, id=user_id)
+        # if member is not None:  
+        #     await log_channel.send(f'Unmuting <@{user_id}>.')
+        #     await member.remove_roles(mute_role, reason=None, atomic=True)
+        # else:
+        #     # Member most likely left the server
+        #     await log_channel.send(f'Tried to unmute member <@{user_id}> but they are no longer on the server.')
 
 
     @commands.guild_only()
@@ -224,7 +294,6 @@ class ModSystem(commands.Cog, name='Moderation'):
 
         error_embed = bot_tools.create_simple_embed(ctx, 'Erorr', f'Not a valid time format. Chose only one from days, hours, minutes. Don\'t mix them. Use `!help {ctx.command.name}` for more details.')
 
-        ban_message = f'\"{ban_message}\" by <@{ctx.message.author.id}>'
         user_id = 0
         try: 
             user_id = int(mention.replace('<@', '').replace('>', '').replace('!', ''))
@@ -232,9 +301,12 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        member = discord.utils.get(ctx.guild.members, id=user_id)
-        if member == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
+        user = await self.bot.fetch_user(user_id)
+
+        now = datetime.utcnow()
+
+        if user is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a valid user!'))
             return
 
         log_channel = discord.utils.get(ctx.guild.channels, id=config.log_channel_id)
@@ -267,30 +339,37 @@ class ModSystem(commands.Cog, name='Moderation'):
             delta_string = 'Permanentaly'
         else:
             await ctx.send(embed=error_embed)
+            return
 
-        new_time = datetime.utcnow() + delta
+        new_time = now + delta
         until = ''
         if time_amount == 'perma':
             until = 'permanentaly'
         else:
-            until = f'until {time.strftime("%a, %d %b %Y, %H:%M:%S GMT", new_time.timetuple())}'
+            until = f'until {new_time.strftime("%d %b %y, %H:%M:%S GMT")}'
 
-        await ctx.send(f'Banning {member.name} {until}.')
-        await ctx.guild.ban(member, reason=ban_message, delete_message_days=del_days)
+        await ctx.send(f'Banning {user.name} {until}.')
+        await ctx.guild.ban(user, reason=ban_message, delete_message_days=del_days)
 
-        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Banning', _description=f'Banning <@{user_id}> ({member.name}: {user_id}) in <#{ctx.message.channel.id}> {until}.\n**Reason:**\n{ban_message}'))
+        await log_channel.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Banning', _description=f'Banning <@{user_id}> ({user.name}: {user_id}) in <#{ctx.message.channel.id}> {until}.\n**Reason:**\n\"{ban_message}\" by <@{ctx.message.author.id}>'))
 
-        banning = {'message': ban_message, 'time': time.strftime("%a, %d %b %Y, %H:%M:%S GMT", time.gmtime()), 'amount': delta_string, 'until': until, 'channel': ctx.message.channel.id}
-        bot_db.add_ban(user_id, banning)
+        user_info = bot_db.user_get({'_id': user_id})
+        if user_info is None:
+            user_info = bot_db.user_new(user_id, user_name)
+
+        banning = {'message': ban_message, 'mod_id': ctx.message.author.id, 'time': now, 'amount': delta_string, 'until': new_time, 'channel': ctx.message.channel.id}
+        bot_db.user_update(action='push', filter={'_id': user_id}, list_name='bans', new_value=banning)
 
         if time_amount == 'perma':
             return
 
-        await discord.utils.sleep_until(new_time)
+        bot_db.server_update(action='push', list_name='unban_queue', new_value={'time': new_time, 'id': user_id})
+        
+        # await discord.utils.sleep_until(new_time)
 
-        # update member just in case
-        await log_channel.send(f'Unbanning <@{user_id}>.')
-        await ctx.guild.unban(self.bot.get_user(user_id), reason='Ban time elapsed')
+        # # update member just in case
+        # await log_channel.send(f'Unbanning <@{user_id}>.')
+        # await ctx.guild.unban(self.bot.get_user(user_id), reason='Ban time elapsed')
 
 
     @commands.guild_only()
@@ -317,16 +396,22 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        if discord.utils.get(ctx.guild.members, id=user_id) == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
-            return
-
         if not number.isdigit():
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help{ctx.command.name}` for more details.'))
             return
-        
-        if bot_db.remove_warning(user_id, int(number)):
+
+        number = int(number)
+
+        user_info = bot_db.user_get({'_id': user_id})
+
+        if user_info is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no warning with that number for this user!'))
+            return
+
+        if len(user_info['warnings']) >= number:
+            bot_db.user_update('pull', filter={'_id': user_id}, list_name='warnings', pull_dict={'time': user_info['warnings'][number - 1]['time']})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Warnings', _description=f'Successfully removed warning **{number}** from <@{user_id}>\'s warnings.'))
+
         else:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no warning with that number!'))
 
@@ -356,16 +441,35 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        if discord.utils.get(ctx.guild.members, id=user_id) == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
-            return
-
         if not number.isdigit():
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help{ctx.command.name}` for more details.'))
             return
         
-        if bot_db.remove_mute(user_id, int(number)):
+        now = datetime.utcnow()
+
+        number = int(number)
+
+        user_info = bot_db.user_get({'_id': user_id})
+
+        if user_info is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no mute with that number!'))
+            return
+
+        mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
+        log_channel = discord.utils.get(ctx.guild.channels, id=config.log_channel_id)
+
+        if len(user_info['mutes']) >= number:
+            bot_db.user_update('pull', filter={'_id': user_id}, list_name='mutes', pull_dict={'time': user_info['mutes'][number - 1]['time']})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Mutes', _description=f'Successfully removed mute **{number}** from <@{user_id}>\'s mutes.'))
+            if now <= user_info['mutes'][number - 1]['until']:
+                member = discord.utils.get(ctx.guild.members, id=user_id)
+                if member is not None:
+                    await member.remove_roles(mute_role, reason='Mute removed', atomic=True)
+                    await log_channel.send(f"Unmuting <@{user_info['_id']}>.")
+                else:
+                    await log_channel.send(f"Tried to unmute member <@{user_info['_id']}> but they are no longer on the server.")
+                bot_db.server_update('pull', list_name='unmute_queue', pull_dict={'time': user_info['mutes'][number - 1]['until']})
+        
         else:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no mute with that number!'))
 
@@ -395,18 +499,37 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        if discord.utils.get(ctx.guild.members, id=user_id) == None:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='This user is not a member of this discord server!'))
-            return
-
         if not number.isdigit():
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help{ctx.command.name}` for more details.'))
             return
         
-        if bot_db.remove_ban(user_id, int(number)):
+        now = datetime.utcnow()
+
+        number = int(number)
+
+        user_info = bot_db.user_get({'_id': user_id})
+
+        if user_info is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no ban with that number!'))
+            return
+
+        log_channel = discord.utils.get(ctx.guild.channels, id=config.log_channel_id)
+
+        if len(user_info['bans']) <= number:
+            bot_db.user_update('pull', filter={'_id': user_id}, list_name='bans', pull_dict={'time': user_info['bans'][number - 1]['time']})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Bans', _description=f'Successfully removed ban **{number}** from <@{user_id}>\'s bans.'))
+            if now <= user_info['bans'][number - 1]['until']:
+                user = await self.bot.fetch_user(user_id)
+                guild = ctx.guild
+                if user is not None:
+                    await guild.unban(user, reason='Manually unbanned')
+                    await log_channel.send(f"Unbanning <@{user_id}>.")
+                else:
+                    await log_channel.send(f"Tried to unban member <@{unban['id']}> but the account no longer seems to exist.")
+                bot_db.server_update('pull', list_name='unban_queue', pull_dict={'time': user_info['bans'][number - 1]['until']})
+
         else:
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no bans with that number!'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'There is no ban with that number!'))
 
 
     @commands.guild_only()
@@ -432,16 +555,54 @@ class ModSystem(commands.Cog, name='Moderation'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid ping!'))
             return
 
-        warns = bot_db.get_user_warnings(user_id)
-        mutes = bot_db.get_user_mutes(user_id)
-        bans = bot_db.get_user_bans(user_id)
-        if warns == None: 
-            warns = []
-        if mutes == None:
-            mutes = []
-        if bans == None:
-            bans = []
-        await ctx.send(embed=self.create_sheet(ctx, warns, mutes, bans, self.bot.get_user(user_id)))
+        user = None
+        user_name = ''
+        try:
+            user = await self.bot.fetch_user(user_id)
+        except:
+            user_name = 'Unavailalbe'
+
+        if user is not None: 
+            user_name = user.name
+
+        user_info = bot_db.user_get({'_id': user_id})
+        if user_info is None:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='No logs exist.'))
+            return
+
+        await ctx.send(embed=self.create_sheet(ctx, user_info['warnings'], user_info['mutes'], user_info['bans'], user, user_id, user_name))
+
+
+    def cog_unload(self):
+        self.unban_unmute.cancel()
+
+
+    @tasks.loop(minutes=1)
+    async def unban_unmute(self):
+        unmute_queue = bot_db.server_get()['unmute_queue']
+        unban_queue = bot_db.server_get()['unban_queue']
+        guild = self.bot.guilds[0]
+        mute_role = discord.utils.get(guild.roles, id=bot_db.server_get()['mute_role_id'])
+        log_channel = discord.utils.get(guild.channels, id=bot_db.server_get()['log_channel_id'])
+        now = datetime.utcnow()
+        for unmute in unmute_queue:
+            if now > unmute['time']:
+                member = discord.utils.get(guild.members, id=unmute['id'])
+                if member is not None:
+                    await member.remove_roles(mute_role, reason='Mute time elapsed', atomic=True)
+                    await log_channel.send(f"Unmuting <@{unmute['id']}>.")
+                else:
+                    await log_channel.send(f"Tried to unmute member <@{unmute['id']}> but they are no longer on the server.")
+                bot_db.server_update('pull', list_name='unmute_queue', pull_dict={'time': unmute['time']})
+        for unban in unban_queue:
+            if now > unban['time']:
+                user = await self.bot.fetch_user(unban['id'])
+                if user is not None:
+                    await guild.unban(user, reason='Ban time elapsed')
+                    await log_channel.send(f"Unbanning <@{unban['id']}>.")
+                else:
+                    await log_channel.send(f"Tried to unban member <@{unban['id']}> but the account no longer seems to exist.")
+                bot_db.server_update('pull', list_name='unban_queue', pull_dict={'time': unban['time']})
 
 
 def setup(bot):

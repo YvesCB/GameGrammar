@@ -36,7 +36,7 @@ class OwnerCheckFailure(commands.CheckFailure):
 def is_server_owner():
     async def predicate(ctx):
         is_owner_bool = ctx.author.id == ctx.guild.owner.id
-        if not is_admin_bool:
+        if not is_owner_bool:
             raise AdminCheckFailure()
         return True
     return commands.check(predicate)
@@ -44,7 +44,7 @@ def is_server_owner():
 
 def is_admin():
     async def predicate(ctx):
-        is_admin_bool = common_member([r['name'] for r in bot_db.get_all_admin_roles()], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id 
+        is_admin_bool = common_member([r['name'] for r in bot_db.server_get()['admin_roles']], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id
         if not is_admin_bool:
             raise AdminCheckFailure()
         return True 

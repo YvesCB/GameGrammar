@@ -27,12 +27,12 @@ class TagSystem(commands.Cog, name='Tags'):
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
         if len(command) == 1:
-            tags = [t['name'] for t in bot_db.get_all_tags()]
+            tags = sorted([tag['name'] for tag in bot_db.server_get()['tags']])
             await ctx.send(embed=bot_tools.create_list_embed(ctx=ctx, _title='Tags', _description='Here is a list of all the tags you can use.', _field_name='Tags', items=tags))
         else:
             [_, tag_name] = command
-            tag = bot_db.get_tag(tag_name)
-            if not bot_db.exists_tag(tag_name):
+            tag = bot_db.server_get(project={'_id': 0, 'tags': {'$elemMatch': {'name': tag_name}}})
+            if len(tag) == 0:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The Tag `{tag_name}` does not exists.'))
             else:
                 await ctx.send(tag['response'])
@@ -52,11 +52,12 @@ class TagSystem(commands.Cog, name='Tags'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, tag_name, tag_content] = command
-        if bot_db.exists_tag(tag_name):
+        tag = bot_db.server_get(project={'_id': 0, 'tags': {'$elemMatch': {'name': tag_name}}})
+        if len(tag) != 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The tag `{tag_name}` already exists.'))
             return
         else:
-            bot_db.add_tag(tag_name, tag_content)
+            bot_db.server_update('push', list_name='tags', new_value={tag_name, tag_content})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Tag', _description=f'Successfully added tag `{tag_name}`!'))
 
 
@@ -75,11 +76,12 @@ class TagSystem(commands.Cog, name='Tags'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, tag_name] = command
-        if not bot_db.exists_tag(tag_name):
+        tag = bot_db.server_get(project={'_id': 0, 'tags': {'$elemMatch': {'name': tag_name}}})
+        if len(tag) == 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'`{tag_name}` does not exists!'))
             return
         else:
-            bot_db.remove_tag(tag_name)
+            bot_db.server_update('pull', list_name='tags', pull_dict={'name': tag_name})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Tag', _description=f'Successfully removed tag `{tag_name}`'))
 
 

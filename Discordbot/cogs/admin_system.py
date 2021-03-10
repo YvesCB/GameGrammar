@@ -18,7 +18,7 @@ class AdminRoleSystem(commands.Cog, name='Admin Roles'):
         help='Shows a list of all current admin roles on the server. The list can only be modified by the Super Admin specified in the config file.\nUsage: `!admins/!a`',
         usage='Usage: `!admins/!a`')
     async def list_admins(self, ctx):
-        admins = [admins['name'] for admins in bot_db.get_all_admin_roles()]
+        admins = [admins['role_name'] for admins in bot_db.server_get()['admin_roles']]
         await ctx.send(embed=bot_tools.create_list_embed(ctx=ctx, _title='Admin roles', _description='Here is a list of all the admin roles for GrammarBot on this server.', _field_name='Admin roles', items=admins))
 
 
@@ -37,12 +37,17 @@ class AdminRoleSystem(commands.Cog, name='Admin Roles'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, role_name] = command
-        if bot_db.exists_admin_role(role_name):
+        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elementMatch': {'admin_roles.name': role_name}}})
+        if len(admin_roles) != 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` is already an admin.'))
             return
         else:
             if role_name in [roles.name for roles in ctx.guild.roles]:
-                bot_db.add_admin_role(role_name)
+                bot_db.server_update(
+                    'push', 
+                    list_name='admin_roles',
+                    new_value={'id': discord.utils.get(ctx.guild.roles, name=role_name).id, 'role_name': role_name}
+                    )
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Admin roles', _description=f'Successfully added the role `{role_name}` to the list of admins.'))
             else:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` does not exist on this server.'))
@@ -63,11 +68,16 @@ class AdminRoleSystem(commands.Cog, name='Admin Roles'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, role_name] = command
-        if not bot_db.exists_admin_role(role_name):
+        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elementMatch': {'admin_roles.name': role_name}}})
+        if len(admin_roles) == 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` is not on the list of admins.'))
             return
         else:
-            bot_db.remove_admin_role(role_name)
+            bot_db.server_update(
+                    'pull', 
+                    list_name='admin_roles',
+                    pull_dict={'role_name': role_name}
+                    )
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Admin roles', _description=f'Successfully removed the role `{role_name}` from the list of admins.'))
 
 

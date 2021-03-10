@@ -15,35 +15,33 @@ class UserRoleSystem(commands.Cog, name='User Roles'):
     @commands.Cog.listener()
     @commands.guild_only()
     async def on_raw_reaction_add(self, payload):
-        role_emotes = bot_db.get_role_emotes()[0]['role_emote']
-        data = bot_db.get_role_data()
-        if data is None or role_emotes is None:
+        server_data = bot_db.server_get()
+        if 'user_role_data' not in list(server_data.keys()):
             return
             
-        if payload.message_id != data[0]['message_id']:
+        if payload.message_id != server_data['user_role_data']['message_id']:
             return
 
-        for emote, role in role_emotes.items():
+        for emote, role in server_data['user_role_data']['emote_role'].items():
             if payload.emoji.id == int(emote.split(':')[2]):
                 guild = self.bot.get_guild(payload.guild_id)
                 role = discord.utils.get(guild.roles, id=role)
                 user = discord.utils.get(guild.members, id=payload.user_id)
-                await user.add_roles(role, reason=None, atomic=True)
+                await user.add_roles(role, reason='Reaction role', atomic=True)
                 print(f'Added role {role.name} to member {user.name}')
 
     
     @commands.Cog.listener()
     @commands.guild_only()
     async def on_raw_reaction_remove(self, payload):
-        role_emotes = bot_db.get_role_emotes()[0]['role_emote']
-        data = bot_db.get_role_data()
-        if data is None or role_emotes is None:
+        server_data = bot_db.server_get()
+        if 'user_role_data' not in list(server_data.keys()):
             return
             
-        if payload.message_id != data[0]['message_id']:
+        if payload.message_id != server_data['user_role_data']['message_id']:
             return
 
-        for emote, role_id in role_emotes.items():
+        for emote, role_id in server_data['user_role_data']['emote_role'].items():
             if payload.emoji.id == int(emote.split(':')[2]):
                 guild = self.bot.get_guild(payload.guild_id)
                 role = discord.utils.get(guild.roles, id=role_id)
@@ -115,8 +113,8 @@ class UserRoleSystem(commands.Cog, name='User Roles'):
         except:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='IDs must be numbers!'))
             return
-        data = bot_db.get_role_data()
-        if data is None: 
+        data = bot_db.server_get()
+        if 'user_role_data' not in list(data.keys()): 
             channel = discord.utils.get(ctx.guild.text_channels, id=ch_id)
             if channel is None:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid channel id!'))
@@ -125,11 +123,12 @@ class UserRoleSystem(commands.Cog, name='User Roles'):
             if message is None:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid message id!'))
                 return
-            bot_db.fill_role_data(msg_id, ch_id)
+            bot_db.server_update('update', new_value={'user_role_data.message_id': msg_id})
+            bot_db.server_update('update', new_value={'user_role_data.channel_id': ch_id})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'Successfully set reaction role channel to <#{channel.id}> and message to {message.jump_url} !'))
         else:
-            channel = discord.utils.get(ctx.guild.text_channels, id=data[0]['channel_id'])
-            message = discord.utils.get(await channel.history().flatten(), id=data[0]['message_id'])
+            channel = discord.utils.get(ctx.guild.text_channels, id=bot_db.server_get()['user_role_data']['channel_id'])
+            message = discord.utils.get(await channel.history().flatten(), id=bot_db.server_get()['user_role_data']['message_id'])
             
             try:
                 response = await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'The current reaction role channel is <#{channel.id}> and the message {message.jump_url} ! Are you sure you want to change it?'))
@@ -158,7 +157,8 @@ class UserRoleSystem(commands.Cog, name='User Roles'):
                     if message is None:
                         await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description='Not a valid message id!'))
                         return
-                    bot_db.change_role_data(msg_id, ch_id)
+                    bot_db.server_update('update', new_value={'user_role_data.message_id': msg_id})
+                    bot_db.server_update('update', new_value={'user_role_data.channel_id': ch_id})
                     await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Reaction Role Message', _description=f'Successfully set reaction role channel to <#{channel.id}> and message to {message.jump_url} !'))
                 elif str(reaction.emoji) == cross_mark:
                     await ctx.send('Cancelled!')
@@ -173,7 +173,7 @@ class UserRoleSystem(commands.Cog, name='User Roles'):
         for emote, role in bot_tools.grouped(filtered_message, 2):
             emote_dict.update({emote: int(role)})
 
-        bot_db.update_role_data(emote_dict)
+        bot_db.server_update('update', new_value={'user_role_data.emote_role': emote_dict})
 
         for emote, role in emote_dict.items():
             emote_id = emote.split(':')[2]

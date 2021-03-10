@@ -1,11 +1,12 @@
 import discord
 import json
 import requests
-import time
+from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
 import config
 import bot_tools
+import bot_db
 
 
 def create_notif_embed(title, image_url, game, viewers):
@@ -130,8 +131,8 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     went_live_at = 0
     
     para = {
-        'Client-id': config.Client_id,
-        'Authorization': config.Oauth2,
+        'Client-id': bot_db.server_get()['twitch']['client_id'],
+        'Authorization': bot_db.server_get()['twitch']['oauth2'],
     }
 
     def __init__(self, bot):
@@ -141,38 +142,44 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         self.twitch_status.start()
 
 
+    def refresh_token(self):
+        refresh_data = requests.get(f'https://twitchtokengenerator.com/api/refresh/{bot_db.server_get()["twitch"]["refresh"]}')
+
+        return refresh_data.text
+
+
     def get_live_data(self):
-        live_data = requests.get(f'https://api.twitch.tv/helix/streams?user_id={config.user_id}', headers=self.para)
+        live_data = requests.get(f'https://api.twitch.tv/helix/streams?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
 
         return live_data.text
 
 
     def get_broadcaster_data(self):
-        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels?broadcaster_id={config.user_id}', headers=self.para)
+        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
 
         return broadcaster_data.text
 
 
     def get_user_info(self):
-        user_data = requests.get(f'https://api.twitch.tv/helix/users?id={config.user_id}', headers=self.para)
+        user_data = requests.get(f'https://api.twitch.tv/helix/users?id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
 
         return user_data.text
 
 
     def get_videos(self):
-        videos = requests.get(f'https://api.twitch.tv/helix/videos?user_id={config.user_id}', headers=self.para)
+        videos = requests.get(f'https://api.twitch.tv/helix/videos?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
 
         return videos.text
 
 
     def get_follows(self):
-        follows = requests.get(f'https://api.twitch.tv/helix/users/follows?to_id={config.user_id}', headers=self.para)
+        follows = requests.get(f'https://api.twitch.tv/helix/users/follows?to_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
 
         return follows.text
 
 
     def get_subs(self):
-        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={config.user_id}', headers=self.para).text)
+        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para).text)
         
         next_subs = subs
 
@@ -180,7 +187,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
         while bool(next_subs['pagination']):
             cursor = next_subs['pagination']['cursor']
-            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={config.user_id}&after={cursor}', headers=self.para).text)
+            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}&after={cursor}', headers=self.para).text)
             subs['data'].extend(next_subs['data'])
 
         return subs
@@ -284,12 +291,11 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         data = json.loads(self.get_live_data())
         try:
             # if stream online
+            message = None
+            guild = discord.utils.get(self.bot.guilds, name=bot_db.server_get()["guild_name"])
+            channel = discord.utils.get(guild.channels, id=bot_db.server_get()["stream_channel_id"])
             if len(data['data']) > 0 and not self.is_live and self.six_h_passed():
-                guild = discord.utils.get(self.bot.guilds, name=config.discord_guild)
-                channel = discord.utils.get(guild.channels, id=config.stream_channel_id)
                 game = json.loads(self.get_game(data['data'][0]['game_id']))
-                print(guild.name, channel.name)
-
                 title = data['data'][0]['title']
                 thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
                 game_name = ''
@@ -299,7 +305,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                     game_name = 'None'
                 viewer_count = data['data'][0]['viewer_count']
 
-                await channel.send(
+                message = await channel.send(
                     content='Hey <@&739058472704016487> , GameGrammar has gone live!', 
                     embed=create_notif_embed(
                         title,
@@ -314,9 +320,44 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             elif len(data['data']) == 0 and self.is_live:
                 self.is_live = False
                 print('Not live anymore!')
+            elif len(data['data']) > 0 and self.is_live and not self.six_h_passed():
+                game = json.loads(self.get_game(data['data'][0]['game_id']))
+                title = data['data'][0]['title']
+                thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
+                game_name = ''
+                try:
+                    game_name = game['data'][0]['name']
+                except:
+                    game_name = 'None'
+                viewer_count = data['data'][0]['viewer_count']
+
+                await message.edit( 
+                    content='Hey <@&739058472704016487> , GameGrammar has gone live!', 
+                    embed=create_notif_embed(
+                        title,
+                        thumb_url,
+                        game_name,
+                        viewer_count
+                    )
+                )
         except Exception as e:
             print('Error while trying to post live ping!', e)
             pass
+
+        refreshtime = bot_db.server_get()['twitch']['refreshtime']
+        now = datetime.utcnow()
+
+        if now > refreshtime:
+            refresh_data = json.loads(self.refresh_token())
+
+            if refresh_data['success']:
+                bot_db.server_update('update', new_value={'twitch.oauth2': f'Bearer {refresh_data["token"]}'})
+                refreshtime = now + timedelta(days=30)
+                bot_db.server_update('update', new_value={'twitch.refreshtime': refreshtime})
+                print('oauth token refreshed')
+            else:
+                print('Error while trying to refresh oauth token')
+
 
 
 def setup(bot):

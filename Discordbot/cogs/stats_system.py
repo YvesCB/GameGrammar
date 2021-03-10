@@ -55,10 +55,13 @@ class StatsSystem(commands.Cog, name='Stats'):
             value = member.created_at.strftime("%a, %d %b %Y, %H:%M:%S GMT"),
             inline = False
         )
-        user_points = bot_db.get_user_points(member.id)
+        user_info = bot_db.user_get({'_id': member.id})
+        if user_info is None:
+            user_info = bot_db.user_new(member.id, member.name)
+        user_points = user_info['point_amount']
         embed.add_field(
             name = 'Grammar points (Awarded by others via GamePad reaction)',
-            value = user_points['point_amount'],
+            value = user_info['point_amount'],
             inline = False
         )
         # embed.add_field(

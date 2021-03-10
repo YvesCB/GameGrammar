@@ -19,47 +19,50 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
     async def on_voice_state_update(self, member, before, after):
         # case 1
         if before.channel is None and after.channel is not None:
-            entry = bot_db.get_voice_text(after.channel.id)
+            entry = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': after.channel.id}}})
             # entering into afk or non role channel
-            if entry is None:
+            if len(entry) == 0:
                 return
             else:
-                role = member.guild.get_role(entry['r_id'])
-                await member.add_roles(role, reason=None, atomic=True)
+                role = member.guild.get_role(entry['role_id'])
+                await member.add_roles(role, reason='Joined voice chat', atomic=True)
                 print(f'{member.name} entered {after.channel.name} and got role {role.name}')
 
         # case 2
         elif before.channel is not None and after.channel is not None and not before.channel == after.channel:
-            entry_before = bot_db.get_voice_text(before.channel.id)
-            entry_after = bot_db.get_voice_text(after.channel.id)
+            entry_before = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': before.channel.id}}})
+            entry_after = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': after.channel.id}}})
             # coming back from afk or other non-listed role channel
-            if entry_before is None and entry_after is not None:
-                role_after = member.guild.get_role(entry_after['r_id'])
-                await member.add_roles(role_after, reason=None, atomic=True)
+            if len(entry_before) == 0 and len(entry_after) != 0:
+                role_after = member.guild.get_role(entry_after['role_id'])
+                await member.add_roles(role_after, reason='Joined voice chat', atomic=True)
                 print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and received {role_after.name}')
 
             # going into afk or other non role channel
-            elif entry_before is not None and entry_after is None:
-                role_before = member.guild.get_role(entry_before['r_id'])
+            elif len(entry_before) != 0 and len(entry_after) == 0:
+                role_before = member.guild.get_role(entry_before['role_id'])
                 await member.remove_roles(role_before, reason=None, atomic=True)
                 print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and lost {role_before.name}')
 
+            elif len(entry_before) == 0 and len(entry_after) == 0:
+                return
+
             else:
-                role_before = member.guild.get_role(entry_before['r_id'])
-                role_after = member.guild.get_role(entry_after['r_id'])
-                await member.remove_roles(role_before, reason=None, atomic=True)
-                await member.add_roles(role_after, reason=None, atomic=True)
+                role_before = member.guild.get_role(entry_before['role_id'])
+                role_after = member.guild.get_role(entry_after['role_id'])
+                await member.remove_roles(role_before, reason='Left voice chat', atomic=True)
+                await member.add_roles(role_after, reason='Joined voice chat', atomic=True)
                 print(f'{member.name} left {before.channel.name} and entered {after.channel.name} and changed roles from {role_before.name} to {role_after.name}')
 
         # case 3
         elif before.channel is not None and after.channel is None:
-            entry = bot_db.get_voice_text(before.channel.id)
+            entry = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': after.channel.id}}})
             # leaving afk or other non role channel
-            if entry is None:
+            if len(entry) == 0:
                 return
             else:
-                role = member.guild.get_role(entry['r_id'])
-                await member.remove_roles(role, reason=None, atomic=True)
+                role = member.guild.get_role(entry['role_id'])
+                await member.remove_roles(role, reason='Left voice chat', atomic=True)
                 print(f'{member.name} left {before.channel.name} and lost role {role.name}')
 
 
@@ -83,7 +86,7 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
         tc_id = int(tc_id)
         vc = ctx.guild.get_channel(vc_id)
         tc = ctx.guild.get_channel(tc_id)
-        if bot_db.exists_voice_text(vc_id):
+        if len(bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': vc_id}}})) != 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role for `{vc.name}` is already set up.'))
             return
         else:
@@ -97,7 +100,7 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
                 # create role, set up perms, add db entry
                 role = await ctx.guild.create_role(name=f'In {vc.name}')
                 await tc.set_permissions(role, read_messages=True)
-                bot_db.add_voice_text(vc_id, tc_id, role.id)
+                bot_db.server_update('push', list_name='voice_text_roles', new_value={'voice_channel_id': vc_id, 'text_channel_id': tc_id, 'role_id': role.id})
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Voice role', _description=f'Successfully created the role `{role.name}` for users in `{vc.name}` to see `{tc.name}`.'))
 
 
@@ -108,7 +111,7 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
         aliases=['vr_remove'], 
         brief='Remove a role that belongs to a voice chat.',
         help='This command can be used to remove an existing role that has been linked to a voice chat and text chat. That role will no longer be applied to users in said voice chat. This command only works with roles that have previously been linked to a voice chat. **This command can only be used by a user with an admin role.**',
-        usage='Usage: `!vc_role_remove VoiceChID TextChID`')
+        usage='Usage: `!vc_role_remove VoiceChID`')
     async def remove_vc_role(self, ctx):
         try:
             command = bot_tools.parse_command(ctx.message.content, 1)
@@ -119,13 +122,13 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
         vc_id = int(vc_id)
         vc = ctx.guild.get_channel(vc_id)
 
-        if bot_db.exists_voice_text(vc_id):
-            entry = bot_db.get_voice_text(vc_id)
-            role = ctx.guild.get_role(entry['r_id'])
+        entry = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': vc_id}}})
+        if len(entry) != 0:
+            role = ctx.guild.get_role(entry['role_id'])
             role_name = role.name
-            tc = ctx.guild.get_channel(entry['tc_id'])
+            tc = ctx.guild.get_channel(entry['text_channel_id'])
             await role.delete()
-            bot_db.remove_voic_text(vc_id)
+            bot_db.server_update('pull', list_name='voice_text_roles', pull_dict={'voice_channel_id': vc_id})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Voice role', _description=f'Successfully removed the voice role `{role_name}` from the voice/text pair `{vc.name}`/`{tc.name}`.'))
             return
         else:

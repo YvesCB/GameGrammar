@@ -77,9 +77,11 @@ class PointSystem(commands.Cog, name='Points'):
         if isinstance(payload.emoji, str):
             return
         elif payload.emoji.id == config.point_emote_id and not message.author.id == payload.user_id:
-            bot_db.user_points_upsert(message.author.id, 'incr')
-            user_points = bot_db.get_user_points(message.author.id)
-            print(f'Incr. points for {message.author.name}. Now has {user_points["point_amount"]}')
+            user_info = bot_db.user_get({'_id': message.author.id})
+            if user_info is None:
+                user_info = bot_db.user_new(message.author.id, message.author.name)
+            bot_db.user_update('increment', filter={'_id': message.author.id}, incr_index='point_amount')
+            print(f'Incr. points for {message.author.name}. Now has {user_info["point_amount"] + 1}')
 
     
     @commands.Cog.listener()
@@ -90,9 +92,11 @@ class PointSystem(commands.Cog, name='Points'):
         if isinstance(payload.emoji, str):
             return
         elif payload.emoji.id == config.point_emote_id and not message.author.id == payload.user_id:
-            bot_db.user_points_upsert(message.author.id, 'decr')
-            user_points = bot_db.get_user_points(message.author.id)
-            print(f'Decr. points for {message.author.name}. Now has {user_points["point_amount"]}')
+            user_info = bot_db.user_get({'_id': message.author.id})
+            if user_info is None:
+                user_info = bot_db.user_new(message.author.id, message.author.name)
+            bot_db.user_update('increment', filter={'_id': message.author.id}, incr_index='point_amount', incr_value=-1)
+            print(f'Decr. points for {message.author.name}. Now has {user_info["point_amount"] - 1}')
 
 
     @commands.guild_only()
@@ -103,8 +107,8 @@ class PointSystem(commands.Cog, name='Points'):
         help='This command will display the GrammarPoint leaderboard for the top 20 users on the server. If you want to know more about how to get GrammarPoints check the help command for the point system section the help command.',
         usage='Usage: `!leaderboard\!lb`')
     async def leaderboard(self, ctx):
-        user_points = bot_db.get_all_user_points()
-        points_dict = {user_points[i]['id'] : user_points[i]['point_amount'] for i in range(0,len(user_points))}
+        users = list(bot_db.user_get_all())
+        points_dict = {users[i]['_id'] : users[i]['point_amount'] for i in range(0,len(users))}
 
         points_dict = sorted(points_dict.items(), key=lambda x: x[1], reverse=True)
         # for i, k in points_dict:
@@ -159,7 +163,12 @@ class PointSystem(commands.Cog, name='Points'):
         print(points)
 
         for elements in points.most_common():
-            bot_db.user_points_update(elements[0], elements[1])
+            user = await self.bot.fetch_user(elements[0])
+            if user is None:
+                continue
+            if bot_db.user_get({'_id': elements[0]}) is None:
+                bot_db.user_new(elements[0], user.name)
+            bot_db.user_update('update', filter={'_id': elements[0]}, new_value={'point_amount': elements[1]})
 
 
 def setup(bot):

@@ -1,4 +1,5 @@
 import discord
+import logging
 from discord.ext import commands, tasks
 import random
 import os
@@ -17,27 +18,32 @@ bot.remove_command('help')
 
 @bot.event
 async def on_ready():
-    guild = discord.utils.get(bot.guilds, name=config.discord_guild)
-    print(
-        f'{bot.user.name} has connected to Discord guild:\n'
-        f'{guild.name}(id: {guild.id})'
-    )
+    guilds = bot.guilds
+    for guild in guilds: 
+        print(
+            f'{bot.user.name} has connected to Discord guild:\n'
+            f'{guild.name}(id: {guild.id})'
+        )
     await bot.change_presence(activity=discord.Game('Try !help'))
+    bot_db.server_update('update', new_value={'guild_name': guilds[0].name})
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'cogs.{filename[:-3]}')
 
 
 @bot.event
 async def on_member_join(member):
-    guild = discord.utils.get(bot.guilds, name=config.discord_guild)
-    channel = discord.utils.get(guild.channels, id=config.welcome_ch_id)
+    guild = bot.guilds[0]
+    channel = discord.utils.get(guild.channels, id=bot_db.server_get()['welcome_channel_id'])
     msg = random.choice(bot_tools.welcome_messages).replace('<user>', f'<@{member.id}>')
-    mutes = bot_db.get_user_mutes(member.id)
+    mutes = bot_db.user_get({'_id': member.id})
     if mutes is not None:
+        mutes = mutes['mutes']
         for mute in mutes:
             now = datetime.utcnow()
-            until = datetime.strptime(mute['until'], "%a, %d %b %Y, %H:%M:%S GMT")
-            log_channel = discord.utils.get(member.guild.channels, id=config.log_channel_id)
-            if now < until:
-                await member.add_roles(discord.utils.get(member.guild.roles, id=config.mute_role_id), reason=None, atomic=True)
+            log_channel = discord.utils.get(member.guild.channels, id=bot_db.server_get()['log_channel_id'])
+            if now < mute['until']:
+                await member.add_roles(discord.utils.get(member.guild.roles, id=bot_db.server_get()['mute_role_id']), reason=None, atomic=True)
                 await log_channel.send(f'Member <@{member.id}> tried to rejoin to get unmuted. Mute role was attached to them again until the unmute time has come.')
                 return
     await channel.send(f'{msg}\nThere are a few Roles you can assign yourself. Check out <#759415738820853790>!\n自分にロールをつけることもできます。 <#759415738820853790> をチェックしてください！')
@@ -76,9 +82,7 @@ async def relaod(ctx):
 #     await ctx.send(embed=await bot_tools.create_help_embed(ctx, bot.cogs))
 
 
-for filename in os.listdir('./cogs'):
-    if filename.endswith('.py'):
-        bot.load_extension(f'cogs.{filename[:-3]}')
+
 
 
 bot.run(config.discord_token)

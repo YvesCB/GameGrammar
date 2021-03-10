@@ -2,6 +2,7 @@ import traceback
 import sys
 from discord.ext import commands
 import discord
+import time
 
 import bot_tools
 
@@ -44,7 +45,7 @@ class CommandErrorHandler(commands.Cog):
             return await ctx.send(embed=bot_tools.create_simple_embed(_title='Error', _description=f'{ctx.command} can only be used by the server owner.'))
 
 
-        print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+        print(f'{time.strftime("%a, %d %b %Y, %H:%M:%S GMT", time.gmtime())}Ignoring exception in command {format(ctx.command)}:', file=sys.stderr)
         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
