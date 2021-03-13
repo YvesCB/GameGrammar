@@ -56,7 +56,7 @@ class VoiceSystem(commands.Cog, name='Voice Roles'):
 
         # case 3
         elif before.channel is not None and after.channel is None:
-            entry = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': after.channel.id}}})
+            entry = bot_db.server_get(project={'_id': 0, 'voice_text_roles': {'$elemMatch': {'voice_channel_id': before.channel.id}}})
             # leaving afk or other non role channel
             if len(entry) == 0:
                 return
