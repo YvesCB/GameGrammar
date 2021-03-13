@@ -37,7 +37,7 @@ class AdminRoleSystem(commands.Cog, name='Admin Roles'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, role_name] = command
-        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elementMatch': {'admin_roles.name': role_name}}})
+        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elemMatch': {'admin_roles.name': role_name}}})
         if len(admin_roles) != 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` is already an admin.'))
             return
@@ -68,7 +68,7 @@ class AdminRoleSystem(commands.Cog, name='Admin Roles'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
             return
         [_, role_name] = command
-        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elementMatch': {'admin_roles.name': role_name}}})
+        admin_roles = bot_db.server_get(project={'_id': 0, 'admin_roles': {'$elemMatch': {'admin_roles.name': role_name}}})
         if len(admin_roles) == 0:
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The role `{role_name}` is not on the list of admins.'))
             return
