@@ -57,7 +57,7 @@ class TagSystem(commands.Cog, name='Tags'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'The tag `{tag_name}` already exists.'))
             return
         else:
-            bot_db.server_update('push', list_name='tags', new_value={tag_name, tag_content})
+            bot_db.server_update('push', list_name='tags', new_value={tag_name: tag_content})
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Tag', _description=f'Successfully added tag `{tag_name}`!'))
 
 
