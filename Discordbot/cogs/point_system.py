@@ -138,7 +138,7 @@ class PointSystem(commands.Cog, name='Points'):
 
         for channel in ctx.guild.text_channels:
             # print('Searching:', channel.name, '...')
-            value_string += f'**{channel.name}** ...'
+            value_string = f'**{channel.name}** ...'
             reaction_count = 0
             # print(value_string)
             await response.edit(embed=self.create_embed(ctx, value_string))
