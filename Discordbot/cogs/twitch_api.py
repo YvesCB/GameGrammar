@@ -130,6 +130,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     """There is a number of functionality that makes use of the Twitch API. The bot monitors when a GameGrammar stream goes live and will automatically post a message in the appropriate channel. You can also get some staticsts of the Twitch channel by using the Twitch stats command. This will include things like Follower count, Subscriber count, latest VOD and, if the stream is currently live, viewer count."""
     is_live = False
     went_live_at = 0
+    message = None
     
     para = {
         'Client-id': bot_db.server_get()['twitch']['client_id'],
@@ -140,7 +141,6 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         self.bot = bot
         is_live = False
         went_live_at = 0
-        self.message = None
         self.twitch_status.start()
 
 
