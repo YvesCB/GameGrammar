@@ -140,6 +140,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         self.bot = bot
         is_live = False
         went_live_at = 0
+        self.message = None
         self.twitch_status.start()
 
 
@@ -292,7 +293,6 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         data = json.loads(self.get_live_data())
         try:
             # if stream online
-            message = None
             guild = discord.utils.get(self.bot.guilds, name=bot_db.server_get()["guild_name"])
             channel = discord.utils.get(guild.channels, id=bot_db.server_get()["stream_channel_id"])
             if len(data['data']) > 0 and not self.is_live and self.six_h_passed():
