@@ -1,7 +1,6 @@
 import discord
 import json
 import requests
-import time
 from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
@@ -129,8 +128,6 @@ def create_live_embed(user, title, game, live_views, follow_count, sub_count, vi
 class TwitchAPI(commands.Cog, name='Twitch API'):
     """There is a number of functionality that makes use of the Twitch API. The bot monitors when a GameGrammar stream goes live and will automatically post a message in the appropriate channel. You can also get some staticsts of the Twitch channel by using the Twitch stats command. This will include things like Follower count, Subscriber count, latest VOD and, if the stream is currently live, viewer count."""
     is_live = False
-    went_live_at = 0
-    message = None
     
     para = {
         'Client-id': bot_db.server_get()['twitch']['client_id'],
@@ -140,7 +137,10 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     def __init__(self, bot):
         self.bot = bot
         is_live = False
-        went_live_at = 0
+        went_live_at = bot_db.server_get()
+        if 'last_live' not in went_live_at['twitch'].keys():
+            bot_db.server_update('update', new_value={'twitch.last_live': datetime.utcnow()})
+        self.message = None
         self.twitch_status.start()
 
 
@@ -203,7 +203,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
     # check if at least six hours have passed
     def six_h_passed(self):
-        return time.time() - self.went_live_at > 21600
+        return datetime.utcnow() - bot_db.server_get()['twitch']['last_live'] > timedelta(hours=6)
 
 
     @commands.command(
@@ -306,7 +306,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                     game_name = 'None'
                 viewer_count = data['data'][0]['viewer_count']
 
-                message = await channel.send(
+                self.message = await channel.send(
                     content='Hey <@&739058472704016487> , GameGrammar has gone live!', 
                     embed=create_notif_embed(
                         title,
@@ -315,13 +315,13 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                         viewer_count
                     )
                 )
-                self.went_live_at = time.time()
+                bot_db.server_update('update', new_value={'twitch.live_at': datetime.utcnow()})
                 self.is_live = True
                 print('Stream went live')
             elif len(data['data']) == 0 and self.is_live:
                 self.is_live = False
                 print('Not live anymore!')
-            elif len(data['data']) > 0 and self.is_live and not self.six_h_passed():
+            elif len(data['data']) > 0 and self.is_live:
                 game = json.loads(self.get_game(data['data'][0]['game_id']))
                 title = data['data'][0]['title']
                 thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
@@ -332,7 +332,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                     game_name = 'None'
                 viewer_count = data['data'][0]['viewer_count']
 
-                await message.edit( 
+                await self.message.edit( 
                     content='Hey <@&739058472704016487> , GameGrammar has gone live!', 
                     embed=create_notif_embed(
                         title,

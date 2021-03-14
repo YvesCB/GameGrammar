@@ -44,7 +44,7 @@ def is_server_owner():
 
 def is_admin():
     async def predicate(ctx):
-        is_admin_bool = common_member([r['name'] for r in bot_db.server_get()['admin_roles']], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id
+        is_admin_bool = common_member([r['role_name'] for r in bot_db.server_get()['admin_roles']], [roles.name for roles in ctx.author.roles]) or ctx.author.id == config.default_admin_id
         if not is_admin_bool:
             raise AdminCheckFailure()
         return True 

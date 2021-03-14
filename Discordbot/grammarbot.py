@@ -49,15 +49,15 @@ async def on_member_join(member):
     await channel.send(f'{msg}\nThere are a few Roles you can assign yourself. Check out <#759415738820853790>!\n自分にロールをつけることもできます。 <#759415738820853790> をチェックしてください！')
 
 
-@bot.event
-async def on_message(message):
-    if message.author.bot:
-        return
-    elif message.content == 'o/':
-        await message.channel.send('\\o')
-    elif message.content == '\\o':
-        await message.channel.send('o/')
-    await bot.process_commands(message)
+# @bot.event
+# async def on_message(message):
+#     if message.author.bot:
+#         return
+#     elif message.content == 'o/':
+#         await message.channel.send('\\o')
+#     elif message.content == '\\o':
+#         await message.channel.send('o/')
+#     await bot.process_commands(message)
 
 
 @bot_tools.is_admin()
