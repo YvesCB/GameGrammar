@@ -1,3 +1,4 @@
+pymongo==3.11.3
 discord.py==1.5.1
 tinydb==4.3.0
 requests==2.23.0
