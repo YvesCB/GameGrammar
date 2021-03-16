@@ -103,9 +103,37 @@ class HelpCommmand(commands.Cog, name='Help'):
     """The help command will show you how to use the bot and what functionality there is."""
     def __init__(self, bot):
         self.bot = bot
+        self.current = 0
 
 
-    @commands.guild_only()
+    async def reaction_add(self, check, help_message, right_arrow, left_arrow, embeds):
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=600.0, check=check)
+        except:
+            return
+        if str(reaction.emoji) == right_arrow:
+            if self.current < len(embeds) - 1:
+                self.current += 1
+                await help_message.edit(embed=embeds[self.current])
+        elif str(reaction.emoji) == left_arrow:
+            if self.current > 0:
+                self.current -= 1
+                await help_message.edit(embed=embeds[self.current])
+
+    async def reaction_remove(self, check, help_message, right_arrow, left_arrow, embeds):
+        try:
+            reaction, user = await self.bot.wait_for('reaction_remove', timeout=600.0, check=check)
+        except:
+            return
+        if str(reaction.emoji) == right_arrow:
+            if self.current < len(embeds) - 1:
+                self.current += 1
+                await help_message.edit(embed=embeds[self.current])
+        elif str(reaction.emoji) == left_arrow:
+            if self.current > 0:
+                self.current -= 1
+                await help_message.edit(embed=embeds[self.current])
+
     @commands.command(
         name='help', 
         aliases=['?', 'h'], 
@@ -127,32 +155,26 @@ class HelpCommmand(commands.Cog, name='Help'):
             left_arrow = '\U00002B05'
 
             embeds = await create_help_embeds(ctx, cogs, other_commands)
-            current = 0
 
-            help_message = await ctx.send(embed=embeds[current])
+            help_message = await ctx.send(embed=embeds[self.current])
             await help_message.add_reaction(left_arrow)
             await help_message.add_reaction(right_arrow)
+
 
             def check(reaction, user):
                 return user == ctx.message.author and user != self.bot.user and (str(reaction.emoji) == right_arrow or left_arrow and reaction.message == help_message)
 
             while(True):
+                task_add = asyncio.create_task(self.reaction_add(check, help_message, right_arrow, left_arrow, embeds))
+                task_remove = asyncio.create_task(self.reaction_remove(check, help_message, right_arrow, left_arrow, embeds))
+
                 try:
-                    reaction, user = await self.bot.wait_for('reaction_add', timeout=600.0, check=check)
-                except asyncio.TimeoutError:
-                    await help_message.remove_reaction(left_arrow, help_message.author)
-                    await help_message.remove_reaction(right_arrow, help_message.author)
+                    done, pending = await asyncio.wait({task_add, task_remove}, return_when=asyncio.FIRST_COMPLETED)
+                except:
                     return
-                if str(reaction.emoji) == right_arrow:
-                    if current < len(embeds) - 1:
-                        current += 1
-                        await help_message.edit(embed=embeds[current])
-                    await reaction.remove(user)
-                elif str(reaction.emoji) == left_arrow:
-                    if current > 0:
-                        current -= 1
-                        await help_message.edit(embed=embeds[current])
-                    await reaction.remove(user)
+                if task_add in done or task_remove in done:
+                    task_add.cancel()
+                    task_remove.cancel()
     
         [_, command_name] = command
         command_name = command_name.replace('!','').replace('`','')

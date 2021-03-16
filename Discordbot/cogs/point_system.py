@@ -70,8 +70,9 @@ class PointSystem(commands.Cog, name='Points'):
 
 
     @commands.Cog.listener()
-    @commands.guild_only()
     async def on_raw_reaction_add(self, payload):
+        if payload.guild_id is None:
+            return
         channel = discord.utils.get(self.bot.get_guild(payload.guild_id).text_channels, id=payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         if isinstance(payload.emoji, str):
@@ -85,8 +86,9 @@ class PointSystem(commands.Cog, name='Points'):
 
     
     @commands.Cog.listener()
-    @commands.guild_only()
     async def on_raw_reaction_remove(self, payload):
+        if payload.guild_id is None:
+            return
         channel = discord.utils.get(self.bot.get_guild(payload.guild_id).text_channels, id=payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         if isinstance(payload.emoji, str):
