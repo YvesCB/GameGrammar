@@ -111,28 +111,32 @@ class HelpCommmand(commands.Cog, name='Help'):
             reaction, user = await self.bot.wait_for('reaction_add', timeout=600.0, check=check)
         except:
             return
+        current = int(help_message.embeds.pop().title[-3:-2]) - 1
+        print(current)
         if str(reaction.emoji) == right_arrow:
-            if self.current < len(embeds) - 1:
-                self.current += 1
-                await help_message.edit(embed=embeds[self.current])
+            if current < len(embeds) - 1:
+                print('+')
+                await help_message.edit(embed=embeds[current + 1])
         elif str(reaction.emoji) == left_arrow:
-            if self.current > 0:
-                self.current -= 1
-                await help_message.edit(embed=embeds[self.current])
+            if current > 0:
+                print('-')
+                await help_message.edit(embed=embeds[current - 1])
 
     async def reaction_remove(self, check, help_message, right_arrow, left_arrow, embeds):
         try:
             reaction, user = await self.bot.wait_for('reaction_remove', timeout=600.0, check=check)
         except:
             return
+        current = int(help_message.embeds.pop().title[-3:-2]) - 1
+        print(current)
         if str(reaction.emoji) == right_arrow:
-            if self.current < len(embeds) - 1:
-                self.current += 1
-                await help_message.edit(embed=embeds[self.current])
+            if current < len(embeds) - 1:
+                print('+')
+                await help_message.edit(embed=embeds[current + 1])
         elif str(reaction.emoji) == left_arrow:
-            if self.current > 0:
-                self.current -= 1
-                await help_message.edit(embed=embeds[self.current])
+            if current > 0:
+                print('-')
+                await help_message.edit(embed=embeds[current - 1])
 
     @commands.command(
         name='help', 
@@ -156,7 +160,7 @@ class HelpCommmand(commands.Cog, name='Help'):
 
             embeds = await create_help_embeds(ctx, cogs, other_commands)
 
-            help_message = await ctx.send(embed=embeds[self.current])
+            help_message = await ctx.send(embed=embeds[0])
             await help_message.add_reaction(left_arrow)
             await help_message.add_reaction(right_arrow)
 
@@ -173,6 +177,7 @@ class HelpCommmand(commands.Cog, name='Help'):
                 except:
                     return
                 if task_add in done or task_remove in done:
+                    print('done')
                     task_add.cancel()
                     task_remove.cancel()
     
