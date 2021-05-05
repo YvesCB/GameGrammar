@@ -343,12 +343,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                 )
         except Exception as e:
             print('Error while trying to post live ping!', e)
+            print(data)
             pass
 
         refreshtime = bot_db.server_get()['twitch']['refreshtime']
         now = datetime.utcnow()
 
-        if now > refreshtime:
+        # if now > refreshtime:
+        if True:
             refresh_data = json.loads(self.refresh_token())
 
             if refresh_data['success']:
