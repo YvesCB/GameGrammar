@@ -349,8 +349,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         refreshtime = bot_db.server_get()['twitch']['refreshtime']
         now = datetime.utcnow()
 
-        # if now > refreshtime:
-        if True:
+        if now > refreshtime:
             refresh_data = json.loads(self.refresh_token())
 
             if refresh_data['success']:
