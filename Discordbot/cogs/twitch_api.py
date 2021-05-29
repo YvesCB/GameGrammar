@@ -130,13 +130,6 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     """There is a number of functionality that makes use of the Twitch API. The bot monitors when a GameGrammar stream goes live and will automatically post a message in the appropriate channel. You can also get some staticsts of the Twitch channel by using the Twitch stats command. This will include things like Follower count, Subscriber count, latest VOD and, if the stream is currently live, viewer count."""
     is_live = False
     
-    def get_para(self):
-        para = {
-                'Client-id': bot_db.server_get()['twitch']['client_id'],
-                'Authorization': bot_db.server_get()['twitch']['oauth2'],
-                }
-        return para
-
 
     def __init__(self, bot):
         self.bot = bot
@@ -148,50 +141,87 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         self.twitch_status.start()
 
 
+    def get_standard_headers(self):
+        headers = {
+                'Client-id': bot_db.server_get()['twitch']['client_id'],
+                'Authorization': bot_db.server_get()['twitch']['oauth2']
+                }
+        return headers
+
+
     def get_access_token(self, code):
-        access_data = requests.post(f'https://id.twitch.tv/oauth2/token?client_id={bot_db.server_get()["twitch"]["client_id"]}&client_secret={bot_db.server_get()["twitch"]["client_secret"]}&code={code}&grant_type=authorization_code&redirect_uri=https://localhost')
+        headers = {
+                'client_id': bot_db.server_get()['twitch']['client_id'],
+                'client_secret': bot_db.server_get()['twitch']['client_secret'],
+                'code': code,
+                'grant_type': 'authorization_code',
+                'redirect_uri': 'https://localhost'
+                }
+        access_data = requests.post(f'https://id.twitch.tv/oauth2/token', params=headers)
 
         return access_data.text
 
 
     def refresh_token(self):
-        refresh_data = requests.get(f'https://id.twitch.tv/oauth2/token--data-urlencode?grant_type=refresh_token&refresh_token={bot_db.server_get()["twitch"]["refresh"]}&client_id={bot_db.server_get()["twitch"]["client_id"]}&client_secret={bot_db.server_get()["twitch"]["client_secret"]}')
+        params = {
+                'refresh_token': bot_db.server_get()['twitch']['refresh'],
+                'grant_type': 'refresh_token'
+                }
+        refresh_data = requests.post(f'https://id.twitch.tv/oauth2/token', params=params, headers=self.get_standard_headers())
 
         return refresh_data.text
 
 
     def get_live_data(self):
-        live_data = requests.get(f'https://api.twitch.tv/helix/streams?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
+        params = {
+                'user_id': bot_db.server_get()['twitch']['channel_id']
+                }
+        live_data = requests.get(f'https://api.twitch.tv/helix/streams', params=params, headers=self.get_standard_headers())
 
         return live_data.text
 
 
     def get_broadcaster_data(self):
-        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
+        params = {
+                'broadcaster_id': f'{bot_db.server_get()["twitch"]["channel_id"]}',
+                }
+        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels', params=params, headers=self.get_standard_headers())
 
         return broadcaster_data.text
 
 
     def get_user_info(self):
-        user_data = requests.get(f'https://api.twitch.tv/helix/users?id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
+        params = {
+                'id': bot_db.server_get()['twitch']['channel_id']
+                }
+        user_data = requests.get(f'https://api.twitch.tv/helix/users', params=params, headers=self.get_standard_headers())
 
         return user_data.text
 
 
     def get_videos(self):
-        videos = requests.get(f'https://api.twitch.tv/helix/videos?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
+        params = {
+                'user_id': bot_db.server_get()['twitch']['channel_id']
+                }
+        videos = requests.get(f'https://api.twitch.tv/helix/videos', params=params, headers=self.get_standard_headers())
 
         return videos.text
 
 
     def get_follows(self):
-        follows = requests.get(f'https://api.twitch.tv/helix/users/follows?to_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
+        params = {
+                'to_id': bot_db.server_get()['twitch']['channel_id']
+                }
+        follows = requests.get(f'https://api.twitch.tv/helix/users/follows', params=params, headers=self.get_standard_headers())
 
         return follows.text
 
 
     def get_subs(self):
-        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para()).text)
+        params = {
+                'broadcaster_id': bot_db.server_get()['twitch']['channel_id']
+                }
+        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions', params=params, headers=self.get_standard_headers()).text)
         
         next_subs = subs
 
@@ -199,14 +229,17 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
         while bool(next_subs['pagination']):
             cursor = next_subs['pagination']['cursor']
-            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}&after={cursor}', headers=self.get_para()).text)
+            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?&after={cursor}', params=params, headers=self.get_standard_headers()).text)
             subs['data'].extend(next_subs['data'])
 
         return subs
 
 
     def get_game(self, game_id):
-        game_data = requests.get(f'https://api.twitch.tv/helix/games?id={game_id}', headers=self.get_para())
+        params = {
+                'id': game_id
+                }
+        game_data = requests.get(f'https://api.twitch.tv/helix/games', params=params, headers=self.get_standard_headers())
 
         return game_data.text
 
@@ -242,11 +275,11 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         now = datetime.utcnow()
         delta = timedelta(seconds=(data['expires_in'] - 200))
 
-        bot_db.server_update('update', new_value={'twitch.oauth2': f'{data["token_type"]} {data["access_token"]}'})
+        bot_db.server_update('update', new_value={'twitch.oauth2': f'Bearer {data["access_token"]}'})
         bot_db.server_update('update', new_value={'twitch.refresh': f'{data["refresh_token"]}'})
         bot_db.server_update('update', new_value={'twitch.refreshtime': now + delta})
 
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Authorization', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
 
 
     @bot_tools.is_server_owner()
@@ -257,21 +290,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             help='With this command, you can display all the current information about the Twitch API. This includes things like the OAuth Token and the Cleint ID/Secret.',
             usage='Usage: `!twitch_print_data\!tpd`')
     async def twitch_print_data(self, ctx):
-        try:
-            command = bot_tools.parse_command(ctx.message.content, 1)
-        except:
-            
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client ID is: `{bot_db.server_get()["twitch"]["client_id"]}`'))
-            return
-
         client_id = bot_db.server_get()['twitch']['client_id']
         client_secret = bot_db.server_get()['twitch']['client_secret']
         oauth2 = bot_db.server_get()['twitch']['oauth2']
         refresh_token = bot_db.server_get()['twitch']['refresh']
-        refresh_time = bot_db.server_get()['twitch']['refreshtime']
-        last_live = bot_db.server_get()['twitch']['last_live']
+        refresh_time = bot_db.server_get()['twitch']['refreshtime'].strftime("%d %b %y, %H:%M:%S GMT")
+        last_live = bot_db.server_get()['twitch']['last_live'].strftime("%d %b %y, %H:%M:%S GMT")
 
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Client ID: `{client_id}`\nClient Secret: `{client_secret}`\nOAuth2 Token: `{oauth2}`\nRefresh Token: `{refresh_token}`\nRefresh Time: `{refresh_time}`\nLast Live: `{last_live}`'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Data', _description=f'Client ID: `{client_id}`\nClient Secret: `{client_secret}`\nOAuth2 Token: `{oauth2}`\nRefresh Token: `{refresh_token}`\nRefresh Time: `{refresh_time}`\nLast Live: `{last_live}`'))
 
 
     @bot_tools.is_server_owner()
@@ -291,14 +317,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
             
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client ID is: `{bot_db.server_get()["twitch"]["client_id"]}`'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Client ID', _description=f'The current Client ID is: `{bot_db.server_get()["twitch"]["client_id"]}`'))
             return
         
         [_, client_id] = command
         old_id = bot_db.server_get()['twitch']['client_id']
         bot_db.server_update('update', new_value={'twitch.client_id': client_id})
 
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Changed Client ID\nFrom: `{old_id}`\nTo:`{bot_db.server_get()["twitch"]["client_id"]}`'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Client ID', _description=f'Changed Client ID\nFrom: `{old_id}`\nTo:`{bot_db.server_get()["twitch"]["client_id"]}`'))
 
 
     @bot_tools.is_server_owner()
@@ -318,14 +344,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
             
-            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client secret is: `{bot_db.server_get()["twitch"]["client_secret"]}`'))
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Client Secret', _description=f'The current Client secret is: `{bot_db.server_get()["twitch"]["client_secret"]}`'))
             return
         
         [_, client_secret] = command
         old_secret = bot_db.server_get()['twitch']['client_secret']
         bot_db.server_update('update', new_value={'twitch.client_secret': client_secret})
 
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Changed Client ID\nFrom: `{old_secret}`\nTo:`{bot_db.server_get()["twitch"]["client_secret"]}`'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Client Secret', _description=f'Changed Client ID\nFrom: `{old_secret}`\nTo:`{bot_db.server_get()["twitch"]["client_secret"]}`'))
 
 
     @commands.guild_only()
@@ -337,7 +363,6 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         usage='Usage: `!twitch_stats\!ts`')
     async def twitch_stats(self, ctx):
         data = json.loads(self.get_live_data())
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'```{data}```'))
         
         # if stream online
         if len(data['data']) > 0:
@@ -473,13 +498,15 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         now = datetime.utcnow()
 
         if now > refreshtime:
+            raw_data = self.refresh_token()
+            print(raw_data)
             refresh_data = json.loads(self.refresh_token())
 
             if not "status" in refresh_data:
-                delta = timedelta(seconds=(refresh_data.expires_in - 200))
-                bot_db.server_update('update', new_value={'twitch.oauth2': f'{refresh_data.token_type} {data.access_token}'})
-                bot_db.server_update('update', new_value={'twitch.refresh': f'{refresh_data.refresh_token}'})
-                bot_db.server_update('update', new_value={'twitch.refreshtime': f'{now + delta}'})
+                delta = timedelta(seconds=(refresh_data['expires_in'] - 200))
+                bot_db.server_update('update', new_value={'twitch.oauth2': f'Bearer {refresh_data["access_token"]}'})
+                bot_db.server_update('update', new_value={'twitch.refresh': f'{refresh_data["refresh_token"]}'})
+                bot_db.server_update('update', new_value={'twitch.refreshtime': now + delta})
 
                 print(f'Updated Twitch credentials!\nToken: {bot_db.server_get()["twitch"]["oauth2"]}\nRefresh Token: {bot_db.server_get()["twitch"]["refresh"]}\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}')
 
