@@ -163,11 +163,16 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
 
     def refresh_token(self):
+        headers = {
+                'Client-id': bot_db.server_get()['twitch']['client_id'],
+                'Authorization': bot_db.server_get()['twitch']['oauth2'],
+                'Client-secret': bot_db.server_get()['twitch']['client_secret']
+                }
         params = {
                 'refresh_token': bot_db.server_get()['twitch']['refresh'],
                 'grant_type': 'refresh_token'
                 }
-        refresh_data = requests.post(f'https://id.twitch.tv/oauth2/token', params=params, headers=self.get_standard_headers())
+        refresh_data = requests.post(f'https://id.twitch.tv/oauth2/token', params=params, headers=headers)
 
         return refresh_data.text
 
