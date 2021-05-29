@@ -251,6 +251,31 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
     @bot_tools.is_server_owner()
     @commands.command(
+            name='twitch_print_data',
+            aliases=['tpd'],
+            brief='Print the current Twitch API Data. Including Tokens.',
+            help='With this command, you can display all the current information about the Twitch API. This includes things like the OAuth Token and the Cleint ID/Secret.',
+            usage='Usage: `!twitch_print_data\!tpd`')
+    async def twitch_print_data(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except:
+            
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client ID is: `{bot_db.server_get()["twitch"]["client_id"]}`'))
+            return
+
+        client_id = bot_db.server_get()['twitch']['client_id']
+        client_secret = bot_db.server_get()['twitch']['client_secret']
+        oauth2 = bot_db.server_get()['twitch']['oauth2']
+        refresh_token = bot_db.server_get()['twitch']['refresh']
+        refresh_time = bot_db.server_get()['twitch']['refreshtime']
+        last_live = bot_db.server_get()['twitch']['last_live']
+
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Client ID: `{client_id}`\nClient Secret: `{client_secret}`\nOAuth2 Token: `{oauth2}`\nRefresh Token: `{refresh_token}`\nRefresh Time: `{refresh_time}`\nLast Live: `{last_live}`'))
+
+
+    @bot_tools.is_server_owner()
+    @commands.command(
             name='twitch_change_id',
             aliases=['tci'],
             brief='Show or Change the saved Client ID for the Twitch API in the Database',
