@@ -1,3 +1,4 @@
+
 import discord
 import json
 import requests
@@ -144,8 +145,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         self.twitch_status.start()
 
 
+    def get_access_token(self, code):
+        access_data = requests.post(f'https://id.twitch.tv/oauth2/token?client_id={bot_db.server_get()["twitch"]["client_id"]}&client_secret={bot_db.server_get()["twitch"]["client_secret"]}&code={code}&grant_type=authorization_code&redirect_uri=https://localhost')
+
+        return access_data.text
+
+
     def refresh_token(self):
-        refresh_data = requests.get(f'https://twitchtokengenerator.com/api/refresh/{bot_db.server_get()["twitch"]["refresh"]}')
+        refresh_data = requests.get(f'https://id.twitch.tv/oauth2/token--data-urlencode?grant_type=refresh_token&refresh_token={bot_db.server_get()["twitch"]["refresh"]}&client_id={bot_db.server_get()["twitch"]["client_id"]}&client_secret={bot_db.server_get()["twitch"]["client_secret"]}')
 
         return refresh_data.text
 
@@ -203,16 +210,103 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
     # check if at least six hours have passed
     def six_h_passed(self):
-        return datetime.utcnow() - bot_db.server_get()['twitch']['last_live'] > timedelta(hours=6)
+        return datetime.utcnow > bot_db.server_get()['twitch']['last_live'] + timedelta(hours=6)
 
 
+    @commands.is_server_owner()
+    @commands.command(
+            name='twitch_authorize',
+            aliases=['ta'],
+            brief='Authorizes the bot with the Twitch API and returns OAuth Token and Refresh Token',
+            help='With this command you can generate the OAuth Token and the Refresh Token for Twitch. It requires the code generated via the POST request <https://id.twitch.tv/oauth2/authorize?client_id=<your client ID>&redirect_uri=<your registered redirect URI>&response_type=code&scope=<space-separated list of scopes>>.',
+            usage='Usage: `!twitch_authorize\!ta <code>`')
+    async def twitch_authorize(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 1)
+        except:
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
+            return
+        
+        [_, code] = command
+        data = json.loads(self.get_access_token(code))
+
+        if("status" in data):
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'An error occured. Response:\n```{data}```'))
+            return
+        else:
+            await ctx.send('Successfully created credentials!\n')
+
+        now = datetime.utcnow()
+        delta = timedelta(seconds=(data.expires_in - 200))
+
+        bot_db.server_update('update', new_value={'twitch.oauth2': f'{data.token_type} {data.access_token}'})
+        bot_db.server_update('update', new_value={'twitch.refresh': f'{data.refresh_token}'})
+        bot_db.server_update('update', new_value={'twitch.refreshtime': f'{now + delta}'})
+
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
+
+
+    @commands.is_server_owner()
+    @commands.command(
+            name='twitch_change_id',
+            aliases=['tci'],
+            brief='Show or Change the saved Client ID for the Twitch API in the Database',
+            help='With this comman you can either show the current Client ID for the Twitch API or change it to a new one. To show the current one, simply use the command without an argument.',
+            usage='Usage: `!twitch_change_id\!tci <ID>`')
+    async def twitch_authorize(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 2)
+        except:
+            try:
+                command = bot_tools.parse_command(ctx.message.content, 1)
+            except:
+                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
+                return
+            
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client ID is: `{bot_db.server_get()["twitch"]["client_id"]}`'))
+            return
+        
+        [_, client_id] = command
+        old_id = bot_db.server_get()['twitch']['client_id']
+        bot_db.server_update('update', new_value={'twitch.client_id': client_id})
+
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Changed Client ID\nFrom: `{old_id}`\nTo:`{bot_db.server_get()["twitch"]["client_id"]}`'))
+
+
+    @commands.is_server_owner()
+    @commands.command(
+            name='twitch_change_secret',
+            aliases=['tcs'],
+            brief='Show or Change the saved Client Secret for the Twitch API in the Database',
+            help='With this comman you can either show the current Client Secret for the Twitch API or change it to a new one. To show the current one, simply use the command without an argument.',
+            usage='Usage: `!twitch_change_secret\!tcs <Secret>`')
+    async def twitch_authorize(self, ctx):
+        try:
+            command = bot_tools.parse_command(ctx.message.content, 2)
+        except:
+            try:
+                command = bot_tools.parse_command(ctx.message.content, 1)
+            except:
+                await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
+                return
+            
+            await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'The current Client secret is: `{bot_db.server_get()["twitch"]["client_secret"]}`'))
+            return
+        
+        [_, client_secret] = command
+        old_secret = bot_db.server_get()['twitch']['client_secret']
+        bot_db.server_update('update', new_value={'twitch.client_secret': client_secret})
+
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Changed Client ID\nFrom: `{old_secret}`\nTo:`{bot_db.server_get()["twitch"]["client_secret"]}`'))
+
+
+    @commands.guild_only()
     @commands.command(
         name='twitch_stats', 
         aliases=['ts'], 
         brief='Shows statistics of the GameGrammar Twitch channel.',
         help='With this command you can at any point see information about the GameGrammar Twitch channel. Especially useful if you want a quick link to the channel or the lastes VOD.',
         usage='Usage: `!twitch_stats\!ts`')
-    @commands.guild_only()
     async def twitch_stats(self, ctx):
         data = json.loads(self.get_live_data())
         
@@ -352,13 +446,16 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         if now > refreshtime:
             refresh_data = json.loads(self.refresh_token())
 
-            if refresh_data['success']:
-                bot_db.server_update('update', new_value={'twitch.oauth2': f'Bearer {refresh_data["token"]}'})
-                refreshtime = now + timedelta(days=30)
-                bot_db.server_update('update', new_value={'twitch.refreshtime': refreshtime})
-                print('oauth token refreshed')
+            if not "status" in refresh_data:
+                delta = timedelta(seconds=(refresh_data.expires_in - 200))
+                bot_db.server_update('update', new_value={'twitch.oauth2': f'{refresh_data.token_type} {data.access_token}'})
+                bot_db.server_update('update', new_value={'twitch.refresh': f'{refresh_data.refresh_token}'})
+                bot_db.server_update('update', new_value={'twitch.refreshtime': f'{now + delta}'})
+
+                print(f'Updated Twitch credentials!\nToken: {bot_db.server_get()["twitch"]["oauth2"]}\nRefresh Token: {bot_db.server_get()["twitch"]["refresh"]}\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}')
+
             else:
-                print('Error while trying to refresh oauth token')
+                print(f'Error while trying to refresh oauth token\n{refresh_data}')
 
 
 
