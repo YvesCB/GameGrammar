@@ -213,7 +213,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         return datetime.utcnow > bot_db.server_get()['twitch']['last_live'] + timedelta(hours=6)
 
 
-    @commands.is_server_owner()
+    @bot_tools.is_server_owner()
     @commands.command(
             name='twitch_authorize',
             aliases=['ta'],
@@ -246,7 +246,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
 
 
-    @commands.is_server_owner()
+    @bot_tools.is_server_owner()
     @commands.command(
             name='twitch_change_id',
             aliases=['tci'],
@@ -273,7 +273,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'Changed Client ID\nFrom: `{old_id}`\nTo:`{bot_db.server_get()["twitch"]["client_id"]}`'))
 
 
-    @commands.is_server_owner()
+    @bot_tools.is_server_owner()
     @commands.command(
             name='twitch_change_secret',
             aliases=['tcs'],
