@@ -309,6 +309,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         usage='Usage: `!twitch_stats\!ts`')
     async def twitch_stats(self, ctx):
         data = json.loads(self.get_live_data())
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='TwitchAPI', _description=f'```{data}```'))
         
         # if stream online
         if len(data['data']) > 0:
