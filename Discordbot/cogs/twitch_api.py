@@ -253,12 +253,12 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             brief='Show or Change the saved Client ID for the Twitch API in the Database',
             help='With this comman you can either show the current Client ID for the Twitch API or change it to a new one. To show the current one, simply use the command without an argument.',
             usage='Usage: `!twitch_change_id\!tci <ID>`')
-    async def twitch_authorize(self, ctx):
+    async def twitch_change_id(self, ctx):
         try:
-            command = bot_tools.parse_command(ctx.message.content, 2)
+            command = bot_tools.parse_command(ctx.message.content, 1)
         except:
             try:
-                command = bot_tools.parse_command(ctx.message.content, 1)
+                command = bot_tools.parse_command(ctx.message.content, 0)
             except:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
@@ -280,12 +280,12 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             brief='Show or Change the saved Client Secret for the Twitch API in the Database',
             help='With this comman you can either show the current Client Secret for the Twitch API or change it to a new one. To show the current one, simply use the command without an argument.',
             usage='Usage: `!twitch_change_secret\!tcs <Secret>`')
-    async def twitch_authorize(self, ctx):
+    async def twitch_change_secret(self, ctx):
         try:
-            command = bot_tools.parse_command(ctx.message.content, 2)
+            command = bot_tools.parse_command(ctx.message.content, 1)
         except:
             try:
-                command = bot_tools.parse_command(ctx.message.content, 1)
+                command = bot_tools.parse_command(ctx.message.content, 0)
             except:
                 await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'{ctx.command.usage}. Use `!help {ctx.command.name}` for more details.'))
                 return
