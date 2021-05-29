@@ -234,18 +234,16 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'An error occured. Response:\n```{data}```'))
             return
         else:
-            await ctx.send(f'Successfully created credentials!\n{data}')
+            await ctx.send(f'Successfully created credentials!')
 
         now = datetime.utcnow()
         delta = timedelta(seconds=(data['expires_in'] - 200))
 
         bot_db.server_update('update', new_value={'twitch.oauth2': f'{data["token_type"]} {data["access_token"]}'})
         bot_db.server_update('update', new_value={'twitch.refresh': f'{data["refresh_token"]}'})
-        bot_db.server_update('update', new_value={'twitch.refreshtime': f'{now + delta}'})
+        bot_db.server_update('update', new_value={'twitch.refreshtime': now + delta})
 
-        refreshtime = datetime.strptime(bot_db.server_get()["twitch"]["refreshtime"])
-
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {refreshtime.strftime("%d %b %y, %H:%M:%S GMT")}'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
 
 
     @bot_tools.is_server_owner()
@@ -445,7 +443,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         refreshtime = bot_db.server_get()['twitch']['refreshtime']
         now = datetime.utcnow()
 
-        if now > datetime.strptime(refreshtime):
+        if now > refreshtime:
             refresh_data = json.loads(self.refresh_token())
 
             if not "status" in refresh_data:
