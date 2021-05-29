@@ -234,13 +234,13 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Error', _description=f'An error occured. Response:\n```{data}```'))
             return
         else:
-            await ctx.send('Successfully created credentials!\n')
+            await ctx.send(f'Successfully created credentials!\n{data}')
 
         now = datetime.utcnow()
-        delta = timedelta(seconds=(data.expires_in - 200))
+        delta = timedelta(seconds=(data['expires_in'] - 200))
 
-        bot_db.server_update('update', new_value={'twitch.oauth2': f'{data.token_type} {data.access_token}'})
-        bot_db.server_update('update', new_value={'twitch.refresh': f'{data.refresh_token}'})
+        bot_db.server_update('update', new_value={'twitch.oauth2': f'{data["token_type"]} {data["access_token"]}'})
+        bot_db.server_update('update', new_value={'twitch.refresh': f'{data["refresh_token"]}'})
         bot_db.server_update('update', new_value={'twitch.refreshtime': f'{now + delta}'})
 
         await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
