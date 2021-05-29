@@ -130,10 +130,13 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     """There is a number of functionality that makes use of the Twitch API. The bot monitors when a GameGrammar stream goes live and will automatically post a message in the appropriate channel. You can also get some staticsts of the Twitch channel by using the Twitch stats command. This will include things like Follower count, Subscriber count, latest VOD and, if the stream is currently live, viewer count."""
     is_live = False
     
-    para = {
-        'Client-id': bot_db.server_get()['twitch']['client_id'],
-        'Authorization': bot_db.server_get()['twitch']['oauth2'],
-    }
+    def get_para:
+        para = {
+                'Client-id': bot_db.server_get()['twitch']['client_id'],
+                'Authorization': bot_db.server_get()['twitch']['oauth2'],
+                }
+        return para
+
 
     def __init__(self, bot):
         self.bot = bot
@@ -158,37 +161,37 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
 
     def get_live_data(self):
-        live_data = requests.get(f'https://api.twitch.tv/helix/streams?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
+        live_data = requests.get(f'https://api.twitch.tv/helix/streams?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
 
         return live_data.text
 
 
     def get_broadcaster_data(self):
-        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
+        broadcaster_data = requests.get(f'https://api.twitch.tv/helix/channels?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
 
         return broadcaster_data.text
 
 
     def get_user_info(self):
-        user_data = requests.get(f'https://api.twitch.tv/helix/users?id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
+        user_data = requests.get(f'https://api.twitch.tv/helix/users?id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
 
         return user_data.text
 
 
     def get_videos(self):
-        videos = requests.get(f'https://api.twitch.tv/helix/videos?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
+        videos = requests.get(f'https://api.twitch.tv/helix/videos?user_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
 
         return videos.text
 
 
     def get_follows(self):
-        follows = requests.get(f'https://api.twitch.tv/helix/users/follows?to_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para)
+        follows = requests.get(f'https://api.twitch.tv/helix/users/follows?to_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para())
 
         return follows.text
 
 
     def get_subs(self):
-        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.para).text)
+        subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}', headers=self.get_para()).text)
         
         next_subs = subs
 
@@ -196,14 +199,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
         while bool(next_subs['pagination']):
             cursor = next_subs['pagination']['cursor']
-            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}&after={cursor}', headers=self.para).text)
+            next_subs = json.loads(requests.get(f'https://api.twitch.tv/helix/subscriptions?broadcaster_id={bot_db.server_get()["twitch"]["channel_id"]}&after={cursor}', headers=self.get_para()).text)
             subs['data'].extend(next_subs['data'])
 
         return subs
 
 
     def get_game(self, game_id):
-        game_data = requests.get(f'https://api.twitch.tv/helix/games?id={game_id}', headers=self.para)
+        game_data = requests.get(f'https://api.twitch.tv/helix/games?id={game_id}', headers=self.get_para())
 
         return game_data.text
 
