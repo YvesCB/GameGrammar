@@ -251,7 +251,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
     # check if at least six hours have passed
     def six_h_passed(self):
-        return datetime.utcnow > bot_db.server_get()['twitch']['last_live'] + timedelta(hours=6)
+        return datetime.utcnow > (bot_db.server_get()['twitch']['last_live'] + timedelta(hours=6))
 
 
     @bot_tools.is_server_owner()
