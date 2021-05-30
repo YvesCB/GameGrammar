@@ -165,12 +165,12 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
     def refresh_token(self):
         headers = {
                 'Client-id': bot_db.server_get()['twitch']['client_id'],
-                'Authorization': bot_db.server_get()['twitch']['oauth2'],
-                'Client-secret': bot_db.server_get()['twitch']['client_secret']
+                'Authorization': bot_db.server_get()['twitch']['oauth2']
                 }
         params = {
                 'refresh_token': bot_db.server_get()['twitch']['refresh'],
-                'grant_type': 'refresh_token'
+                'grant_type': 'refresh_token',
+                'client_secret': bot_db.server_get()['twitch']['client_secret']
                 }
         refresh_data = requests.post(f'https://id.twitch.tv/oauth2/token', params=params, headers=headers)
 
@@ -284,7 +284,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
         bot_db.server_update('update', new_value={'twitch.refresh': f'{data["refresh_token"]}'})
         bot_db.server_update('update', new_value={'twitch.refreshtime': now + delta})
 
-        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Authorization', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}'))
+        await ctx.send(embed=bot_tools.create_simple_embed(ctx=ctx, _title='Twitch Authorization', _description=f'Updated Twitch credentials!\nToken: `{bot_db.server_get()["twitch"]["oauth2"]}`\nRefresh Token: `{bot_db.server_get()["twitch"]["refresh"]}`\nRefresh at: `{bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}`'))
 
 
     @bot_tools.is_server_owner()
@@ -468,7 +468,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                         viewer_count
                     )
                 )
-                bot_db.server_update('update', new_value={'twitch.live_at': datetime.utcnow()})
+                bot_db.server_update('update', new_value={'twitch.last_live': datetime.utcnow()})
                 self.is_live = True
                 print('Stream went live')
             elif len(data['data']) == 0 and self.is_live:
@@ -504,7 +504,6 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
         if now > refreshtime:
             raw_data = self.refresh_token()
-            print(raw_data)
             refresh_data = json.loads(self.refresh_token())
 
             if not "status" in refresh_data:
@@ -513,7 +512,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                 bot_db.server_update('update', new_value={'twitch.refresh': f'{refresh_data["refresh_token"]}'})
                 bot_db.server_update('update', new_value={'twitch.refreshtime': now + delta})
 
-                print(f'Updated Twitch credentials!\nToken: {bot_db.server_get()["twitch"]["oauth2"]}\nRefresh Token: {bot_db.server_get()["twitch"]["refresh"]}\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}')
+                print(f'Updated Twitch credentials!\nRefresh at: {bot_db.server_get()["twitch"]["refreshtime"].strftime("%d %b %y, %H:%M:%S GMT")}')
 
             else:
                 print(f'Error while trying to refresh oauth token\n{refresh_data}')
