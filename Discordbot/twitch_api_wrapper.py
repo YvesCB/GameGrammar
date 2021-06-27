@@ -353,4 +353,45 @@ class Wrapper():
         return data.status_code, json.loads(data.text)
 
 
-    
+    """
+    Search channels returns a list of channels that match the query for channel name or discription
+
+    Requires a query
+
+    Optional parameters:
+        "first":        Max number of objects to return. Max. 100, Default: 20
+        "after":        Cursfor for forward pagination
+
+    https://dev.twitch.tv/docs/api/reference#search-channels
+    """ 
+    def search_channels(self, query, first=20, after=None):
+        params = {
+                'query': query
+                'first': first
+                }
+        if after is not None:
+            params['after'] = after
+
+        data = requests.get(f'https://api.twitch.tv/helix/search/channels', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Gets information about active streams. Sorted by viewer count
+
+    Optional parameters:
+        "first":        Max number of objects to return. Max. 100, Default: 20
+        "after":        Cursor for for forward pagination
+        "before":       Cursor for backwards pagination
+        "game_id":      Specify game. Up to 100 ids
+        "langauge":     Specify the langauge
+        "user_id":      Specify the user id. Up to 100 ids
+        "user_login":   Specify the user login name. Up to 100
+
+    https://dev.twitch.tv/docs/api/reference#get-streams
+    """
+    def search_streams(self, first=20, after=None, before=None, game_id=None, language=None, user_id=None, user_login=None):
+        params = {
+                'first': 
+                } 
