@@ -391,7 +391,161 @@ class Wrapper():
 
     https://dev.twitch.tv/docs/api/reference#get-streams
     """
-    def search_streams(self, first=20, after=None, before=None, game_id=None, language=None, user_id=None, user_login=None):
+    def get_streams(self, first=20, after=None, before=None, game_id=None, language=None, user_id=None, user_login=None):
         params = {
-                'first': 
+                'first': first
                 } 
+        if after is not None:
+            params['after'] = after
+        if before is not None:
+            params['before'] = before
+        if game_id is not None:
+            params['game_id'] = game_id
+        if language is not None:
+            params['language'] = language
+        if user_id is not None:
+            params['user_id'] = user_id
+        if user_login is not None:
+            params['user_login'] = user_login
+
+        data = requests.get(f'https://api.twitch.tv/helix/streams', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Gets streams that the authenticated user follows. Sorted by viewer count
+
+    Requires OAuth token and user:read:follows scope and a user_id
+
+    Optional parameters:
+        "first":        Max number of objects to return. Max. 100, Default: 20
+        "after":        Cursor for for forward pagination
+
+    https://dev.twitch.tv/docs/api/reference#get-followed-streams
+    """
+    def get_followed_streams(self, user_id, first=20, after=None):
+        params = {
+                'first': first,
+                'user_id': user_id
+                } 
+        if after is not None:
+            params['after'] = after
+
+        data = requests.get(f'https://api.twitch.tv/helix/streams', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Create a stream marker
+
+    Requires OAuth token, channel:manage:broadcast scope and a user_id
+
+    Optional parameters:
+        "description":      Description of the marker. Max length 140 chars
+
+    https://dev.twitch.tv/docs/api/reference#create-stream-marker
+    """
+    def create_stream_marker(self, user_id, description=None):
+        params = {
+                'user_id': user_id
+                } 
+        if description is not None:
+            params['description'] = description
+
+        data = requests.post(f'https://api.twitch.tv/helix/streams/markers', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Get a list of stream markers for a specified user's most recnet strema or a specified VOD.
+
+    Requires OAuth token and user:read:broadcast scope. Also either user_id or video_id
+
+    Optional parameters:
+        "first":        Max number of objects to return. Max. 100, Default: 20
+        "after":        Cursor for for forward pagination
+        "before":       Cursor for backwards pagination
+
+    https://dev.twitch.tv/docs/api/reference#get-stream-markers
+    """
+    def get_stream_marker(self, user_id=None, video_id=None, first=20, after=None, before=None):
+        params = {
+                'first': first
+                }
+        if user_id is not None:
+            params['user_id'] = user_id
+        if video_id is not None:
+            params['video_id'] = video_id
+        if after is not None:
+            params['after'] = after
+        if before is not None:
+            params['before'] = before
+
+        if user_id is None and video_id is None:
+            raise TwitchException('At least one out of the values: user_id, video_id need to be specified!')
+
+        data = requests.get(f'https://api.twitch.tv/helix/streams/markers', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Checks if a specified user is subscribed to a specified channel
+
+    Requires a broadcaster_id and a user_id. Also the user:read:subscriptions scope
+
+    https://dev.twitch.tv/docs/api/reference#check-user-subscription
+    """
+    def check_user_subscription(self, user_id, broadcaster_id):
+        params = {
+                'user_id': user_id,
+                'broadcaster_id': broadcaster_id
+                }
+
+        data = requests.get(f'https://api.twitch.tv/helix/subscriptions/user', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Get all stream tags available on Twitch
+
+    Optional parameters:
+        "first":        Max number of objects to return. Max. 100, Default: 20
+        "after":        Cursor for for forward pagination
+        "tag_id":       ID of a tag. Max of 100 can be specified
+
+    https://dev.twitch.tv/docs/api/reference#get-all-stream-tags
+    """
+    def get_all_tags(self, first=20, after=None, tag_id=None):
+        params = {
+                'first': first
+                }
+        if after is not None:
+            params['after'] = after
+        if tag_id is not None:
+            params['tag_id'] = tag_id
+
+        data = requests.get(f'https://api.twitch.tv/helix/tags/streams', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)
+
+
+    """
+    Get all tags for a specified stream
+
+    Requires an OAuth token and a broadcaster_id
+
+    https://dev.twitch.tv/docs/api/reference#get-stream-tags
+    """
+    def get_stream_tags(self, broadcaster_id):
+        params = {
+                'broadcaster_id': broadcaster_id
+                }
+
+        data = requests.get(f'https://api.twitch.tv/helix/streams/tags', params=params, headers=self.Headers)
+
+        return data.status_code, json.loads(data.text)

@@ -259,7 +259,7 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             name='twitch_authorize',
             aliases=['ta'],
             brief='Authorizes the bot with the Twitch API and returns OAuth Token and Refresh Token',
-            help='With this command you can generate the OAuth Token and the Refresh Token for Twitch. It requires the code generated via the POST request <https://id.twitch.tv/oauth2/authorize?client_id=<your client ID>&redirect_uri=<your registered redirect URI>&response_type=code&scope=<space-separated list of scopes>>.',
+            help='With this command you can generate the OAuth Token and the Refresh Token for Twitch. It requires the code generated via the POST request https://id.twitch.tv/oauth2/authorize?client_id=475niji4uqqfnryzu9thxs0tk9m2jx&redirect_uri=https://localhost&response_type=code&scope=analytics:read:extensions%20analytics:read:games%20bits:read%20channel:edit:commercial%20channel:manage:broadcast%20channel:manage:extensions%20channel:manage:polls%20channel:manage:predictions%20channel:manage:redemptions%20channel:manage:videos%20channel:read:editors%20channel:read:predictions%20channel:read:redemptions%20channel:read:stream_key%20channel:read:subscriptions%20clips:edit%20moderation:read%20moderator:manage:automod%20user:edit%20user:edit:follows%20user:manage:blocked_users%20user:read:blocked_users%20user:read:broadcast%20user:read:follows%20user:read:subscriptions%20channel:moderate%20chat:edit',
             usage='Usage: `!twitch_authorize\!ta <code>`')
     async def twitch_authorize(self, ctx):
         try:
