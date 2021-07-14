@@ -10,14 +10,14 @@ import bot_tools
 import bot_db
 
 
-def create_notif_embed(title, image_url, game, viewers):
+def create_notif_embed(title, image_url, game, viewers, game_img_url):
     embed = discord.Embed(
         title="GameGrammar is live", colour=discord.Colour.blue(), url="https://twitch.tv/gamegrammar",
         description=title
     )
     embed.set_image(url=image_url)
     embed.set_thumbnail(
-        url="https://static-cdn.jtvnw.net/jtv_user_pictures/6f4fd276-f717-41a7-986d-35f22cd68c38-profile_image-300x300.png"
+        url=game_img_url
     )
 
     embed.add_field(name="Game", value=game, inline=True)
@@ -75,7 +75,7 @@ def create_offline_embed(user, latest_title, latest_game, follow_count, sub_coun
     return embed
 
 
-def create_live_embed(user, title, game, live_views, follow_count, sub_count, view_count, thumb_url):
+def create_live_embed(user, title, game, live_views, follow_count, sub_count, view_count, thumb_url, game_img_url):
     embed = discord.Embed(
         title="GameGrammar Twitch Stats", 
         colour=discord.Colour.blue(), 
@@ -378,10 +378,14 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
 
             title = data['data'][0]['title']
             game_name = ''
+            game_img_url = ''
             try:
                 game_name = game_data['data'][0]['name']
+                game_img_url = game_data['data'][0]['box_art_url'].replace('{width}', '150').replace('{height}', '200')
             except:
                 game_name = 'None'
+                game_img_url = 'https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg'
+                
             viewer_count = data['data'][0]['viewer_count']
             follow_count = follows['total']
             sub_count = len(subs['data'])
@@ -449,14 +453,18 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
             guild = discord.utils.get(self.bot.guilds, name=bot_db.server_get()["guild_name"])
             channel = discord.utils.get(guild.channels, id=bot_db.server_get()["stream_channel_id"])
             if len(data['data']) > 0 and not self.is_live and self.six_h_passed():
-                game = json.loads(self.get_game(data['data'][0]['game_id']))
+                game_data = json.loads(self.get_game(data['data'][0]['game_id']))
                 title = data['data'][0]['title']
                 thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
                 game_name = ''
+                game_img_url = ''
                 try:
-                    game_name = game['data'][0]['name']
-                except:
+                    game_name = game_data['data'][0]['name']
+                    game_img_url = game_data['data'][0]['box_art_url'].replace('{width}', '150').replace('{height}', '200')
+                except Exception as e:
                     game_name = 'None'
+                    game_img_url = 'https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg'
+                    print('Game Data exception: ', e)
                 viewer_count = data['data'][0]['viewer_count']
 
                 self.message = await channel.send(
@@ -465,7 +473,8 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                         title,
                         thumb_url,
                         game_name,
-                        viewer_count
+                        viewer_count,
+                        game_img_url
                     )
                 )
                 bot_db.server_update('update', new_value={'twitch.last_live': datetime.utcnow()})
@@ -475,14 +484,17 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                 self.is_live = False
                 print('Not live anymore!')
             elif len(data['data']) > 0 and self.is_live:
-                game = json.loads(self.get_game(data['data'][0]['game_id']))
+                game_data = json.loads(self.get_game(data['data'][0]['game_id']))
                 title = data['data'][0]['title']
                 thumb_url =  data['data'][0]['thumbnail_url'].replace('{width}', '1280').replace('{height}', '720')
                 game_name = ''
+                game_img_url = ''
                 try:
-                    game_name = game['data'][0]['name']
+                    game_name = game_data['data'][0]['name']
+                    game_img_url = game_data['data'][0]['box_art_url'].replace('{width}', '150').replace('{height}', '200')
                 except:
                     game_name = 'None'
+                    game_img_url = 'https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg'
                 viewer_count = data['data'][0]['viewer_count']
 
                 await self.message.edit( 
@@ -491,7 +503,8 @@ class TwitchAPI(commands.Cog, name='Twitch API'):
                         title,
                         thumb_url,
                         game_name,
-                        viewer_count
+                        viewer_count,
+                        game_img_url
                     )
                 )
         except Exception as e:
