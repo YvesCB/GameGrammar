@@ -36,7 +36,7 @@ class OwnerCheckFailure(commands.CheckFailure):
 def is_server_owner():
     async def predicate(ctx):
         is_owner_bool = ctx.author.id == ctx.guild.owner.id
-        if not is_admin_bool:
+        if not is_owner_bool:
             raise AdminCheckFailure()
         return True
     return commands.check(predicate)
