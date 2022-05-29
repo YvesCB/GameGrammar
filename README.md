@@ -29,7 +29,7 @@ This would return the second result for “関係”.
 
 ### `!tags`
 
-Will show the list of all availalbe tags.
+Will show the list of all available tags.
 
 ### `!add_tag <tag_name> <tag_response>`
 
