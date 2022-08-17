@@ -270,7 +270,7 @@ class Bot(commands.Bot):
         word = result["japanese"][0].get("word", None)
         reading = result["japanese"][0].get("reading", None)
 
-        message = 'NaruhodoThink'
+        message = '（´-`）.｡oO'
         if word is not None:
             message += f' {word}'
         if reading is not None:
